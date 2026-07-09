@@ -144,23 +144,6 @@ Open **http://localhost:5173** 🎉
 
 ---
 
-## 🏗️ Architecture
-
-```
-Browser (React)
-      │  Axios HTTP
-      ▼
-Spring Boot (port 8080)
-  ├── GameController  →  REST routing
-  ├── GameService     →  Game logic (winner, draw, score)
-  └── Board (model)   →  In-memory state
-```
-
-> The frontend is a pure view layer — it renders state and sends moves.  
-> Every game rule lives exclusively in the Spring Boot backend.
-
----
-
 <div align="center">
 
 Made with ☕ Java + ⚛️ React
