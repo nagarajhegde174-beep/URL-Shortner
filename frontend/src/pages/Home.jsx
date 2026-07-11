@@ -5,17 +5,14 @@ import ScoreBoard  from '../components/ScoreBoard.jsx';
 import WinnerModal from '../components/WinnerModal.jsx';
 import { getGame, newGame, resetGame, makeMove } from '../services/gameApi.js';
 
-/** Empty 3×3 board used as a safe initial state before the API responds. */
+
 const EMPTY_BOARD = [
   ['', '', ''],
   ['', '', ''],
   ['', '', ''],
 ];
 
-/**
- * Home page — orchestrates all game state and API calls.
- * Game logic lives entirely in the backend; the frontend only renders state.
- */
+
 export default function Home() {
   const [board,         setBoard]         = useState(EMPTY_BOARD);
   const [currentPlayer, setCurrentPlayer] = useState('X');
@@ -29,7 +26,7 @@ export default function Home() {
   const [error,         setError]         = useState(null);
   const [showModal,     setShowModal]     = useState(false);
 
-  /** Sync local state from a GameResponse JSON object. */
+  
   const applyResponse = useCallback((data) => {
     setBoard(data.board ?? EMPTY_BOARD);
     setCurrentPlayer(data.currentPlayer ?? 'X');
@@ -39,7 +36,7 @@ export default function Home() {
     setScoreX(data.scoreX ?? 0);
     setScoreO(data.scoreO ?? 0);
     setWinningCells(data.winningCells ?? null);
-    // Slight delay so the winning cell animation plays before the modal appears
+    
     if (data.gameOver) {
       setTimeout(() => setShowModal(true), 600);
     } else {
@@ -47,7 +44,7 @@ export default function Home() {
     }
   }, []);
 
-  /** Generic API wrapper: sets loading, clears error, handles failures. */
+  
   const callApi = useCallback(async (apiFn) => {
     setLoading(true);
     setError(null);
@@ -65,12 +62,12 @@ export default function Home() {
     }
   }, [applyResponse]);
 
-  // Load game state on mount
+  
   useEffect(() => {
     callApi(getGame);
   }, [callApi]);
 
-  // Auto-dismiss error toast after 4 s
+  
   useEffect(() => {
     if (!error) return;
     const timer = setTimeout(() => setError(null), 4000);
@@ -113,7 +110,7 @@ export default function Home() {
         onCellClick={handleCellClick}
       />
 
-      {/* Action buttons */}
+      {}
       <div className="d-flex justify-content-center gap-3 mt-2">
         <button
           className="btn btn-reset"
@@ -135,7 +132,7 @@ export default function Home() {
         </button>
       </div>
 
-      {/* Winner / Draw modal */}
+      {}
       <WinnerModal
         show={showModal}
         winner={winner}
@@ -144,7 +141,7 @@ export default function Home() {
         onReset={handleReset}
       />
 
-      {/* Error toast */}
+      {}
       {error && (
         <div
           className="error-toast alert alert-danger d-flex align-items-center"

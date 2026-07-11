@@ -1,6 +1,4 @@
-/**
- * Top navigation bar.
- */
+
 export default function Navbar() {
   return (
     <nav className="navbar app-navbar px-3">

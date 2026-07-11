@@ -1,11 +1,4 @@
-/**
- * A single cell on the Tic-Tac-Toe board.
- *
- * @param {{ value: string, row: number, col: number,
- *           isWinning: boolean, isDraw: boolean,
- *           gameOver: boolean, loading: boolean,
- *           onClick: (row, col) => void }} props
- */
+
 export default function Cell({ value, row, col, isWinning, isDraw, gameOver, loading, onClick }) {
   const isEmpty    = value === '' || value == null;
   const isOccupied = !isEmpty;

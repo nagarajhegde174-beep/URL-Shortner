@@ -9,9 +9,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * Centralised error handling for REST API responses.
- */
+
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 

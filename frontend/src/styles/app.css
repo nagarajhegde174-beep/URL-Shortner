@@ -1,4 +1,4 @@
-/* ─── Global ──────────────────────────────────────────────────────────── */
+
 :root {
   --bg-deep:       #0d1117;
   --bg-card:       #161b22;
@@ -30,7 +30,7 @@ body {
   min-height: 100vh;
 }
 
-/* ─── Navbar ──────────────────────────────────────────────────────────── */
+
 .app-navbar {
   background: var(--bg-card);
   border-bottom: 1px solid var(--border);
@@ -43,7 +43,7 @@ body {
   letter-spacing: 1px;
 }
 
-/* ─── Score Board ─────────────────────────────────────────────────────── */
+
 .score-board {
   display: flex;
   justify-content: center;
@@ -78,7 +78,7 @@ body {
 .score-tie { color: var(--text-dim); font-size: 1.5rem !important; }
 .score-o   { color: var(--neon-pink); }
 
-/* ─── Status Panel ────────────────────────────────────────────────────── */
+
 .status-panel {
   text-align: center;
   padding: 0.75rem 1rem;
@@ -111,7 +111,7 @@ body {
 .status-panel.turn-x { color: var(--neon-cyan); }
 .status-panel.turn-o { color: var(--neon-pink); }
 
-/* ─── Board ───────────────────────────────────────────────────────────── */
+
 .board-wrapper {
   padding: 1rem;
   background: linear-gradient(135deg,
@@ -130,7 +130,7 @@ body {
   margin: 0 auto;
 }
 
-/* ─── Cell ────────────────────────────────────────────────────────────── */
+
 .cell {
   aspect-ratio: 1 / 1;
   background: var(--bg-tile);
@@ -212,7 +212,7 @@ body {
   50%       { box-shadow: 0 0 24px rgba(0,255,136,0.5), inset 0 0 20px rgba(0,255,136,0.1); }
 }
 
-/* ─── Buttons ─────────────────────────────────────────────────────────── */
+
 .btn-new-game {
   background: linear-gradient(135deg, var(--neon-purple), var(--neon-pink));
   border: none;
@@ -248,7 +248,7 @@ body {
   transform: translateY(-2px);
 }
 
-/* ─── Winner Modal ────────────────────────────────────────────────────── */
+
 .modal-content {
   background: var(--bg-card);
   border: 1px solid var(--border);
@@ -275,7 +275,7 @@ body {
   100% { transform: scale(1) translateY(0); opacity: 1; }
 }
 
-/* ─── Loading spinner ─────────────────────────────────────────────────── */
+
 .loading-overlay {
   position: fixed;
   inset: 0;
@@ -286,7 +286,7 @@ body {
   z-index: 9999;
 }
 
-/* ─── Error toast ─────────────────────────────────────────────────────── */
+
 .error-toast {
   position: fixed;
   bottom: 1.5rem;
@@ -303,7 +303,7 @@ body {
   to   { transform: translateX(-50%) translateY(0);    opacity: 1; }
 }
 
-/* ─── Responsive tweaks ───────────────────────────────────────────────── */
+
 @media (max-width: 480px) {
   .score-board { gap: 1rem; padding: 0.5rem 0.75rem; }
   .board-grid  { gap: 5px; max-width: 300px; }

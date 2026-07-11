@@ -1,17 +1,8 @@
 import Cell from './Cell.jsx';
 
-/**
- * Renders the 3×3 game board using Cell components.
- *
- * @param {{ board: string[][], winningCells: number[][]|null,
- *           gameOver: boolean, draw: boolean, loading: boolean,
- *           onCellClick: (row, col) => void }} props
- */
+
 export default function Board({ board, winningCells, gameOver, draw, loading, onCellClick }) {
-  /**
-   * Returns true if [r, c] is part of the winning combination.
-   * Mirrors the winningCells array returned by the backend.
-   */
+  
   const isWinningCell = (r, c) => {
     if (!winningCells) return false;
     return winningCells.some(([wr, wc]) => wr === r && wc === c);
