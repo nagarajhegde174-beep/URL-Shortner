@@ -3,9 +3,7 @@ package com.example.tictactoe.model;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 
-/**
- * Payload sent by the client when making a move.
- */
+
 public class MoveRequest {
 
     @Min(value = 0, message = "Row must be between 0 and 2")

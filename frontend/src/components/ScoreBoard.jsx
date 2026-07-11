@@ -1,8 +1,4 @@
-/**
- * Displays cumulative scores for X, draws (ties), and O.
- *
- * @param {{ scoreX: number, scoreO: number }} props
- */
+
 export default function ScoreBoard({ scoreX, scoreO }) {
   return (
     <div className="score-board" role="region" aria-label="Score board">

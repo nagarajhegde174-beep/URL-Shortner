@@ -1,17 +1,12 @@
 import { useEffect, useRef } from 'react';
 import { Modal } from 'bootstrap';
 
-/**
- * Bootstrap modal that appears when the game ends (winner or draw).
- *
- * @param {{ show: boolean, winner: string|null, draw: boolean,
- *           onNewGame: () => void, onReset: () => void }} props
- */
+
 export default function WinnerModal({ show, winner, draw, onNewGame, onReset }) {
   const modalRef = useRef(null);
   const bsModal  = useRef(null);
 
-  // Initialise Bootstrap Modal instance once
+  
   useEffect(() => {
     if (modalRef.current) {
       bsModal.current = new Modal(modalRef.current, { backdrop: 'static', keyboard: false });
@@ -19,7 +14,7 @@ export default function WinnerModal({ show, winner, draw, onNewGame, onReset }) 
     return () => bsModal.current?.dispose();
   }, []);
 
-  // Show/hide in response to prop
+  
   useEffect(() => {
     if (!bsModal.current) return;
     if (show) {

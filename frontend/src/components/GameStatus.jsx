@@ -1,9 +1,4 @@
-/**
- * Status banner showing whose turn it is, winner, or draw.
- *
- * @param {{ gameOver: boolean, winner: string|null, draw: boolean,
- *           currentPlayer: string, loading: boolean }} props
- */
+
 export default function GameStatus({ gameOver, winner, draw, currentPlayer, loading }) {
   const getStatusClass = () => {
     if (winner) return 'status-panel winner';

@@ -1,41 +1,36 @@
 package com.example.tictactoe.model;
 
-/**
- * Unified JSON response returned to the frontend after every API call.
- */
+
 public class GameResponse {
 
-    /** 3x3 board cells ("X", "O", or ""). */
+    
     private String[][] board;
 
-    /** Player who moves next ("X" or "O"). */
+    
     private String currentPlayer;
 
-    /** Whether the game has ended. */
+    
     private boolean gameOver;
 
-    /** Winning player, or null. */
+    
     private String winner;
 
-    /** Whether the game ended in a draw. */
+    
     private boolean draw;
 
-    /** Cumulative score for X. */
+    
     private int scoreX;
 
-    /** Cumulative score for O. */
+    
     private int scoreO;
 
-    /**
-     * Winning cells for highlighting on the frontend.
-     * Array of [row, col] pairs, or null.
-     */
+    
     private int[][] winningCells;
 
-    /** Human-readable status message. */
+    
     private String message;
 
-    // ── Builder-style factory ──────────────────────────────────────────────
+    
 
     public static GameResponse from(Board b, String message) {
         GameResponse r = new GameResponse();
@@ -51,7 +46,7 @@ public class GameResponse {
         return r;
     }
 
-    // ── Getters & Setters ──────────────────────────────────────────────────
+    
 
     public String[][] getBoard() { return board; }
     public void setBoard(String[][] board) { this.board = board; }
