@@ -1,11 +1,12 @@
-package com.example.tictactoe;
+package com.dsa.studio;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class TicTacToeApplication {
+public class DsaStudioApplication {
+
     public static void main(String[] args) {
-        SpringApplication.run(TicTacToeApplication.class, args);
+        SpringApplication.run(DsaStudioApplication.class, args);
     }
 }
