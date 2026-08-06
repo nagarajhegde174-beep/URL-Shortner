@@ -29,12 +29,12 @@ const DashboardPage = () => {
           <p className="coming-soon">Phase 2: Java Execution Engine — Coming Soon!</p>
         </div>
         <div className="dashboard-cards">
-          <div className="dash-card">
+          <div className="dash-card" onClick={() => navigate('/debugger')}>
             <span className="card-icon">🧑‍💻</span>
             <h3>Code Playground</h3>
             <p>Write & execute Java code step-by-step</p>
           </div>
-          <div className="dash-card">
+          <div className="dash-card" onClick={() => navigate('/debugger')}>
             <span className="card-icon">🔬</span>
             <h3>Debugger</h3>
             <p>Line-by-line debugging with variable inspection</p>
