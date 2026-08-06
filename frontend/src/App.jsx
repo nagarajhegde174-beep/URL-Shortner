@@ -5,6 +5,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import LoginPage from './pages/auth/LoginPage';
 import RegisterPage from './pages/auth/RegisterPage';
 import DashboardPage from './pages/DashboardPage';
+import DebuggerPage from './pages/DebuggerPage';
 import './styles/auth.css';
 
 function App() {
@@ -19,6 +20,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <DashboardPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/debugger"
+            element={
+              <ProtectedRoute>
+                <DebuggerPage />
               </ProtectedRoute>
             }
           />
