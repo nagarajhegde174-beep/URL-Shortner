@@ -90,9 +90,8 @@ public class JdiDebuggerService {
                     if (event instanceof VMDisconnectEvent || event instanceof VMDeathEvent) {
                         running = false;
                     } 
-                    else if (event instanceof ClassPrepareEvent prepareEvent) {
+                    else if (event instanceof ClassPrepareEvent) {
                         // Class prepared, start step requests on all threads
-                        ReferenceType refType = prepareEvent.referenceType();
                         List<ThreadReference> threads = vm.allThreads();
                         for (ThreadReference thread : threads) {
                             if (thread.status() == ThreadReference.THREAD_STATUS_RUNNING ||

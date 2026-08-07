@@ -10,6 +10,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
@@ -19,20 +20,20 @@ public class UserService {
     private final UserRepository userRepository;
 
     public UserProfileResponse getProfile(UserDetailsImpl currentUser) {
-        User user = userRepository.findById(currentUser.getId())
+        User user = userRepository.findById(Objects.requireNonNull(currentUser.getId(), "User ID cannot be null"))
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
         return mapToProfileResponse(user, currentUser);
     }
 
     @Transactional
     public UserProfileResponse updateProfile(UserDetailsImpl currentUser, UpdateProfileRequest request) {
-        User user = userRepository.findById(currentUser.getId())
+        User user = userRepository.findById(Objects.requireNonNull(currentUser.getId(), "User ID cannot be null"))
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
         if (request.getAvatar() != null) user.setAvatar(request.getAvatar());
         if (request.getBio() != null) user.setBio(request.getBio());
 
-        userRepository.save(user);
+        userRepository.save(Objects.requireNonNull(user));
         return mapToProfileResponse(user, currentUser);
     }
 

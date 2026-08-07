@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Editor from '@monaco-editor/react';
-import api from '../services/api';
 import '../styles/debugger.css';
+import { AnimationProvider, useAnimation } from '../context/AnimationContext';
+import VisualizationEngine from '../components/visualization/VisualizationEngine';
 
 const CODE_TEMPLATES = {
   helloWorld: {
@@ -99,27 +100,32 @@ const CODE_TEMPLATES = {
   }
 };
 
-const DebuggerPage = () => {
+const DebuggerContent = () => {
   const navigate = useNavigate();
   const [selectedTemplate, setSelectedTemplate] = useState('loops');
   const [code, setCode] = useState(CODE_TEMPLATES.loops.code);
   const [className, setClassName] = useState(CODE_TEMPLATES.loops.className);
-  const [inputData, setInputData] = useState('');
   
-  const [isLoading, setIsLoading] = useState(false);
-  const [compileError, setCompileError] = useState(null);
-  const [stepInfo, setStepInfo] = useState(null);
-  
-  // Playback Auto-Run controls
-  const [isPlaying, setIsPlaying] = useState(false);
-  const playIntervalRef = useRef(null);
+  const {
+    stepInfo,
+    isPlaying,
+    speedMs,
+    setSpeedMs,
+    compileError,
+    isLoading,
+    togglePlayback,
+    handleCompileAndRun,
+    handleStepForward,
+    handleStepBackward,
+    handleRestart,
+    resetDebuggerState
+  } = useAnimation();
 
   // Monaco Refs
   const editorRef = useRef(null);
   const monacoRef = useRef(null);
   const decorationsRef = useRef([]);
 
-  // Handle template change
   const handleTemplateChange = (e) => {
     const key = e.target.value;
     setSelectedTemplate(key);
@@ -128,18 +134,11 @@ const DebuggerPage = () => {
     resetDebuggerState();
   };
 
-  const resetDebuggerState = () => {
-    setStepInfo(null);
-    setCompileError(null);
-    stopPlayback();
-  };
-
   const handleEditorDidMount = (editor, monaco) => {
     editorRef.current = editor;
     monacoRef.current = monaco;
   };
 
-  // Highlight executing line in Monaco
   useEffect(() => {
     if (editorRef.current && monacoRef.current && stepInfo && stepInfo.lineNumber) {
       const monaco = monacoRef.current;
@@ -164,97 +163,6 @@ const DebuggerPage = () => {
     }
   }, [stepInfo]);
 
-  // Clean up auto-play interval
-  useEffect(() => {
-    return () => stopPlayback();
-  }, []);
-
-  const stopPlayback = () => {
-    setIsPlaying(false);
-    if (playIntervalRef.current) {
-      clearInterval(playIntervalRef.current);
-      playIntervalRef.current = null;
-    }
-  };
-
-  // API Calls
-  const handleCompileAndRun = async () => {
-    setIsLoading(true);
-    resetDebuggerState();
-    try {
-      const response = await api.post('/execution/run', {
-        className,
-        code,
-        input: inputData
-      });
-      const data = response.data.data;
-      if (data.exceptionName === 'CompilationException') {
-        setCompileError(data.exceptionMessage);
-      } else {
-        setStepInfo(data);
-      }
-    } catch (err) {
-      console.error(err);
-      setCompileError(err.response?.data?.message || 'Error occurred during compile & execution.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleStepForward = async () => {
-    if (!stepInfo) return;
-    try {
-      const response = await api.post('/execution/step?direction=next');
-      const data = response.data.data;
-      if (data) {
-        setStepInfo(data);
-      } else {
-        stopPlayback();
-      }
-    } catch (err) {
-      console.error(err);
-      stopPlayback();
-    }
-  };
-
-  const handleStepBackward = async () => {
-    if (!stepInfo) return;
-    try {
-      const response = await api.post('/execution/step?direction=prev');
-      const data = response.data.data;
-      if (data) {
-        setStepInfo(data);
-      }
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  const handleRestart = async () => {
-    if (!stepInfo) return;
-    try {
-      const response = await api.post('/execution/reset');
-      const data = response.data.data;
-      if (data) {
-        setStepInfo(data);
-      }
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  const togglePlayback = () => {
-    if (isPlaying) {
-      stopPlayback();
-    } else {
-      setIsPlaying(true);
-      playIntervalRef.current = setInterval(() => {
-        handleStepForward();
-      }, 1200);
-    }
-  };
-
-  // Parse heap objects out of active variables
   const getHeapObjects = () => {
     if (!stepInfo || !stepInfo.variables) return [];
     const heap = [];
@@ -289,7 +197,6 @@ const DebuggerPage = () => {
       </header>
 
       <main className="debugger-grid">
-        {/* Controls toolbar */}
         <section className="control-panel">
           <div className="editor-info">
             <select value={selectedTemplate} onChange={handleTemplateChange} className="class-name-input">
@@ -308,7 +215,7 @@ const DebuggerPage = () => {
 
           <div className="control-buttons">
             <button
-              onClick={handleCompileAndRun}
+              onClick={() => handleCompileAndRun(className, code)}
               className="ctrl-btn primary"
               disabled={isLoading}
             >
@@ -343,10 +250,22 @@ const DebuggerPage = () => {
             >
               Step Forward &rarr;
             </button>
+
+            <div className="speed-slider" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginLeft: '1rem' }}>
+              <label style={{ fontSize: '0.85rem' }}>Speed</label>
+              <input 
+                type="range" 
+                min="200" 
+                max="2000" 
+                step="200" 
+                value={speedMs} 
+                onChange={(e) => setSpeedMs(parseInt(e.target.value, 10))}
+                style={{ direction: 'rtl' }}
+              />
+            </div>
           </div>
         </section>
 
-        {/* Code Editor Pane */}
         <section className="editor-section">
           <div className="section-header">
             <span>Editor (Monaco)</span>
@@ -373,7 +292,11 @@ const DebuggerPage = () => {
           </div>
         </section>
 
-        {/* Visualizer Panes (Stack & Heap) */}
+        {/* Phase 3: Visualization Engine integration */}
+        <section className="visualization-section" style={{ gridColumn: 'span 2' }}>
+          <VisualizationEngine className={className} />
+        </section>
+
         <section className="visualizer-section">
           {stepInfo && stepInfo.explanation && (
             <div className="explanation-banner">
@@ -382,7 +305,6 @@ const DebuggerPage = () => {
           )}
 
           <div className="memory-visualizer">
-            {/* Stack Memory */}
             <div className="memory-pane">
               <div className="section-header">Stack Memory (Call Stack)</div>
               <div className="memory-content">
@@ -411,7 +333,6 @@ const DebuggerPage = () => {
               </div>
             </div>
 
-            {/* Heap Memory */}
             <div className="memory-pane">
               <div className="section-header">Heap Memory (Objects)</div>
               <div className="memory-content">
@@ -431,7 +352,6 @@ const DebuggerPage = () => {
           </div>
         </section>
 
-        {/* Compile Error banner */}
         {compileError && (
           <section style={{ gridColumn: '1 / -1' }} className="auth-error">
             <pre style={{ whiteSpace: 'pre-wrap', fontFamily: 'JetBrains Mono', fontSize: '0.85rem' }}>
@@ -440,7 +360,6 @@ const DebuggerPage = () => {
           </section>
         )}
 
-        {/* Variables Table */}
         <section className="variables-section">
           <div className="section-header">Variables Inspector</div>
           <div className="variables-table-wrapper">
@@ -483,7 +402,6 @@ const DebuggerPage = () => {
           </div>
         </section>
 
-        {/* Console Terminal */}
         <section className="terminal-section">
           <div className="section-header">Console Output</div>
           <div className="terminal-content">
@@ -492,6 +410,14 @@ const DebuggerPage = () => {
         </section>
       </main>
     </div>
+  );
+};
+
+const DebuggerPage = () => {
+  return (
+    <AnimationProvider>
+      <DebuggerContent />
+    </AnimationProvider>
   );
 };
 
