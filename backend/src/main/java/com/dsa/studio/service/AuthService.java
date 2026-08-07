@@ -24,6 +24,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -45,7 +46,8 @@ public class AuthService {
         SecurityContextHolder.getContext().setAuthentication(authentication);
         UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
         String jwt = jwtUtils.generateJwtToken(authentication);
-        RefreshToken refreshToken = refreshTokenService.createRefreshToken(userDetails.getId());
+        RefreshToken refreshToken = refreshTokenService.createRefreshToken(
+                Objects.requireNonNull(userDetails.getId(), "User ID cannot be null"));
 
         List<String> roles = userDetails.getAuthorities().stream()
                 .map(item -> item.getAuthority())
@@ -100,11 +102,12 @@ public class AuthService {
         String requestRefreshToken = request.getRefreshToken();
         return refreshTokenService.findByToken(requestRefreshToken)
                 .map(refreshTokenService::verifyExpiration)
-                .map(RefreshToken::getUser)
+                .map(token -> token.getUser())
                 .map(user -> {
                     String token = jwtUtils.generateTokenFromUsername(user.getUsername());
                     // Issue a new refresh token too
-                    RefreshToken newRefreshToken = refreshTokenService.createRefreshToken(user.getId());
+                    RefreshToken newRefreshToken = refreshTokenService.createRefreshToken(
+                            Objects.requireNonNull(user.getId(), "User ID cannot be null"));
                     return new TokenRefreshResponse(token, newRefreshToken.getToken());
                 })
                 .orElseThrow(() -> new TokenRefreshException(requestRefreshToken, "Refresh token not found in database!"));

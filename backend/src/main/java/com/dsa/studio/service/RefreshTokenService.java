@@ -6,6 +6,7 @@ import com.dsa.studio.repository.RefreshTokenRepository;
 import com.dsa.studio.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.Instant;
@@ -27,9 +28,12 @@ public class RefreshTokenService {
     }
 
     @Transactional
-    public RefreshToken createRefreshToken(Long userId) {
+    public RefreshToken createRefreshToken(@NonNull Long userId) {
         // Delete existing token for user if present
-        userRepository.findById(userId).ifPresent(refreshTokenRepository::deleteByUser);
+        userRepository.findById(userId).ifPresent(user -> {
+            refreshTokenRepository.deleteByUser(user);
+            refreshTokenRepository.flush();
+        });
 
         RefreshToken refreshToken = new RefreshToken();
         refreshToken.setUser(userRepository.findById(userId)
@@ -49,7 +53,7 @@ public class RefreshTokenService {
     }
 
     @Transactional
-    public int deleteByUserId(Long userId) {
+    public int deleteByUserId(@NonNull Long userId) {
         return userRepository.findById(userId)
                 .map(refreshTokenRepository::deleteByUser)
                 .orElse(0);
