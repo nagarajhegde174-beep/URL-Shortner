@@ -2,6 +2,7 @@ package com.dsa.studio.service;
 
 import com.dsa.studio.dto.response.StackFrameInfo;
 import com.dsa.studio.dto.response.StepDebugInfo;
+import com.dsa.studio.dto.response.StepMetadata;
 import com.dsa.studio.dto.response.VariableInfo;
 import com.sun.jdi.*;
 import com.sun.jdi.connect.Connector;
@@ -35,6 +36,13 @@ public class JdiDebuggerService {
 
         // 1. Get workspace directory
         String classpath = compilerService.getWorkspaceDir();
+
+        List<String> sourceLines = new ArrayList<>();
+        try {
+            sourceLines = java.nio.file.Files.readAllLines(java.nio.file.Paths.get(classpath, className + ".java"), java.nio.charset.StandardCharsets.UTF_8);
+        } catch (Exception e) {
+            log.warn("Could not read source code for trace metadata: {}", e.getMessage());
+        }
 
         VirtualMachineManager vmm = Bootstrap.virtualMachineManager();
         LaunchingConnector connector = vmm.defaultConnector();
@@ -90,16 +98,12 @@ public class JdiDebuggerService {
                     if (event instanceof VMDisconnectEvent || event instanceof VMDeathEvent) {
                         running = false;
                     } 
-                    else if (event instanceof ClassPrepareEvent) {
-                        // Class prepared, start step requests on all threads
-                        List<ThreadReference> threads = vm.allThreads();
-                        for (ThreadReference thread : threads) {
-                            if (thread.status() == ThreadReference.THREAD_STATUS_RUNNING ||
-                                thread.status() == ThreadReference.THREAD_STATUS_UNKNOWN) {
-                                continue;
-                            }
-                            createStepRequest(erm, thread);
-                        }
+                    else if (event instanceof ClassPrepareEvent cpe) {
+                        // Create a step request for the specific thread that triggered
+                        // class preparation. Using vm.allThreads() with a status check
+                        // is unreliable — the main thread is THREAD_STATUS_RUNNING even
+                        // when suspended by the debugger, so it was being silently skipped.
+                        createStepRequest(erm, cpe.thread());
                     } 
                     else if (event instanceof StepEvent stepEvent) {
                         Location location = stepEvent.location();
@@ -110,13 +114,21 @@ public class JdiDebuggerService {
                             stepCounter++;
                             ThreadReference thread = stepEvent.thread();
                             
+                            String codeLine = "";
+                            int lineIndex = location.lineNumber() - 1;
+                            if (lineIndex >= 0 && lineIndex < sourceLines.size()) {
+                                codeLine = sourceLines.get(lineIndex);
+                            }
+
                             // Capture current state
                             StepDebugInfo debugInfo = captureState(
                                     stepCounter,
                                     location.lineNumber(),
                                     thread,
                                     stdoutBuffer.toString(),
-                                    previousVariableValues
+                                    previousVariableValues,
+                                    codeLine,
+                                    className
                             );
                             
                             trace.add(debugInfo);
@@ -188,7 +200,7 @@ public class JdiDebuggerService {
         return thread;
     }
 
-    private StepDebugInfo captureState(int stepNum, int lineNum, ThreadReference thread, String currentOutput, Map<String, String> prevVals) {
+    private StepDebugInfo captureState(int stepNum, int lineNum, ThreadReference thread, String currentOutput, Map<String, String> prevVals, String codeLine, String className) {
         List<StackFrameInfo> callStack = new ArrayList<>();
         List<VariableInfo> variables = new ArrayList<>();
         String explanation = "Executing line " + lineNum;
@@ -262,6 +274,8 @@ public class JdiDebuggerService {
             log.error("Failed to capture stack state: {}", e.getMessage());
         }
 
+        StepMetadata metadata = extractMetadata(className, codeLine, variables);
+
         return StepDebugInfo.builder()
                 .stepNumber(stepNum)
                 .lineNumber(lineNum)
@@ -269,6 +283,78 @@ public class JdiDebuggerService {
                 .variables(variables)
                 .output(currentOutput)
                 .explanation(explanation)
+                .metadata(metadata)
+                .build();
+    }
+
+    private StepMetadata extractMetadata(String className, String codeLine, List<VariableInfo> variables) {
+        String dataStructure = "ARRAY";
+        
+        Map<String, Integer> pointers = new HashMap<>();
+        List<String> pointerNames = List.of("i", "j", "left", "right", "low", "high", "mid", "start", "end", "p1", "p2", "windowStart", "windowEnd", "minIdx", "maxIdx");
+        for (VariableInfo v : variables) {
+            if (pointerNames.contains(v.getName())) {
+                try {
+                    pointers.put(v.getName(), Integer.parseInt(v.getValue()));
+                } catch (NumberFormatException ignored) {}
+            }
+        }
+        
+        List<Integer> indices = new ArrayList<>();
+        if (codeLine != null) {
+            java.util.regex.Pattern pattern = java.util.regex.Pattern.compile("\\[([a-zA-Z0-9_]+)\\]");
+            java.util.regex.Matcher matcher = pattern.matcher(codeLine);
+            while (matcher.find()) {
+                String idxVarName = matcher.group(1);
+                if (idxVarName.matches("\\d+")) {
+                    indices.add(Integer.parseInt(idxVarName));
+                } else {
+                    for (VariableInfo v : variables) {
+                        if (v.getName().equals(idxVarName)) {
+                            try {
+                                indices.add(Integer.parseInt(v.getValue()));
+                            } catch (NumberFormatException ignored) {}
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        
+        String operation = "READ";
+        if (codeLine != null) {
+            String trimmedLine = codeLine.trim();
+            if (trimmedLine.contains("swap") || className.toLowerCase().contains("reverse") || className.toLowerCase().contains("rotate")) {
+                if (trimmedLine.contains("arr[") && trimmedLine.contains("=")) {
+                    operation = "SWAP";
+                }
+            }
+            if (operation.equals("READ")) {
+                if (trimmedLine.contains("==") || trimmedLine.contains("<") || trimmedLine.contains(">") || trimmedLine.contains("!=") || trimmedLine.contains("<=") || trimmedLine.contains(">=")) {
+                    operation = "COMPARE";
+                } else if (trimmedLine.matches(".*\\b(i|j|left|right|low|high|mid|start|end)\\s*(\\+\\+|\\-\\-|\\+=|\\-=|=).*")) {
+                    operation = "POINTER_MOVE";
+                } else if (trimmedLine.contains("insert") || trimmedLine.contains("size++")) {
+                    operation = "INSERT";
+                } else if (trimmedLine.contains("delete") || trimmedLine.contains("remove") || trimmedLine.contains("size--")) {
+                    operation = "DELETE";
+                } else if (trimmedLine.contains("windowSum") || trimmedLine.contains("windowEnd") || trimmedLine.contains("windowStart")) {
+                    operation = "WINDOW_UPDATE";
+                } else if (trimmedLine.contains("arr[") && trimmedLine.contains("=") && !trimmedLine.contains("==")) {
+                    int equalsIndex = trimmedLine.indexOf('=');
+                    int arrayIndex = trimmedLine.indexOf("arr[");
+                    if (arrayIndex != -1 && arrayIndex < equalsIndex) {
+                        operation = "WRITE";
+                    }
+                }
+            }
+        }
+        
+        return StepMetadata.builder()
+                .dataStructure(dataStructure)
+                .operation(operation)
+                .indices(indices)
+                .pointers(pointers)
                 .build();
     }
 

@@ -19,4 +19,5 @@ public class StepDebugInfo {
     private String exceptionName;
     private String exceptionMessage;
     private String explanation;
+    private StepMetadata metadata;
 }
