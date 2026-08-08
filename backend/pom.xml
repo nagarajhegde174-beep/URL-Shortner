@@ -86,6 +86,13 @@
             <scope>test</scope>
         </dependency>
 
+        <!-- H2 In-Memory DB for tests (replaces MySQL in test profile) -->
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <scope>test</scope>
+        </dependency>
+
         <!-- Swagger / OpenAPI -->
         <dependency>
             <groupId>org.springdoc</groupId>

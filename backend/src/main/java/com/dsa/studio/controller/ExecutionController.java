@@ -2,6 +2,7 @@ package com.dsa.studio.controller;
 
 import com.dsa.studio.dto.request.ExecuteRequest;
 import com.dsa.studio.dto.response.ApiResponse;
+import com.dsa.studio.dto.response.SessionStartResponse;
 import com.dsa.studio.dto.response.StepDebugInfo;
 import com.dsa.studio.security.UserDetailsImpl;
 import com.dsa.studio.service.ExecutionService;
@@ -10,71 +11,103 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/execution")
 @RequiredArgsConstructor
-@Tag(name = "Execution", description = "Debugging and step execution control endpoints")
+@Tag(name = "Execution", description = "Session-based debugging and step execution control endpoints")
 @SecurityRequirement(name = "bearerAuth")
 @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
 public class ExecutionController {
 
     private final ExecutionService executionService;
 
-    @PostMapping("/run")
-    @Operation(summary = "Start a fresh execution session and load debug trace")
-    public ResponseEntity<ApiResponse<StepDebugInfo>> run(
+    @PostMapping("/start")
+    @Operation(summary = "Start a fresh session-based execution and load debug trace")
+    public ResponseEntity<ApiResponse<SessionStartResponse>> startSession(
             @AuthenticationPrincipal UserDetailsImpl currentUser,
             @Valid @RequestBody ExecuteRequest request) {
-        String sessionKey = currentUser.getUsername();
-        StepDebugInfo firstStep = executionService.runAndInitialize(sessionKey, request);
-        return ResponseEntity.ok(ApiResponse.success("Execution trace initialized", firstStep));
+        String username = currentUser.getUsername();
+        SessionStartResponse response = executionService.startSession(username, request);
+        return ResponseEntity.ok(ApiResponse.success("Execution session started", response));
     }
 
-    @PostMapping("/step")
+    @GetMapping("/{sessionId}/trace")
+    @Operation(summary = "Retrieve the full execution trace for the session")
+    public ResponseEntity<ApiResponse<List<StepDebugInfo>>> getTrace(
+            @AuthenticationPrincipal UserDetailsImpl currentUser,
+            @PathVariable String sessionId) {
+        String username = currentUser.getUsername();
+        if (!executionService.isOwner(sessionId, username)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(ApiResponse.error("Access denied. This execution session does not belong to you."));
+        }
+        List<StepDebugInfo> trace = executionService.getFullTrace(sessionId);
+        return ResponseEntity.ok(ApiResponse.success("Full trace retrieved", trace));
+    }
+
+    @GetMapping("/{sessionId}/state")
+    @Operation(summary = "Retrieve current execution step state")
+    public ResponseEntity<ApiResponse<StepDebugInfo>> getState(
+            @AuthenticationPrincipal UserDetailsImpl currentUser,
+            @PathVariable String sessionId) {
+        String username = currentUser.getUsername();
+        if (!executionService.isOwner(sessionId, username)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(ApiResponse.error("Access denied. This execution session does not belong to you."));
+        }
+        StepDebugInfo stepInfo = executionService.getCurrentState(sessionId);
+        if (stepInfo == null) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("No active session trace found."));
+        }
+        return ResponseEntity.ok(ApiResponse.success("Current state retrieved", stepInfo));
+    }
+
+    @PostMapping("/{sessionId}/step")
     @Operation(summary = "Step forward or backward through execution steps")
     public ResponseEntity<ApiResponse<StepDebugInfo>> step(
             @AuthenticationPrincipal UserDetailsImpl currentUser,
+            @PathVariable String sessionId,
             @RequestParam(defaultValue = "next") String direction) {
-        String sessionKey = currentUser.getUsername();
+        String username = currentUser.getUsername();
+        if (!executionService.isOwner(sessionId, username)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(ApiResponse.error("Access denied. This execution session does not belong to you."));
+        }
         StepDebugInfo stepInfo;
         if ("prev".equalsIgnoreCase(direction)) {
-            stepInfo = executionService.getPreviousStep(sessionKey);
+            stepInfo = executionService.getPreviousStep(sessionId);
         } else {
-            stepInfo = executionService.getNextStep(sessionKey);
+            stepInfo = executionService.getNextStep(sessionId);
         }
 
         if (stepInfo == null) {
-            return ResponseEntity.badRequest().body(ApiResponse.error("No active execution session. Call /run first."));
+            return ResponseEntity.badRequest().body(ApiResponse.error("No steps available."));
         }
         return ResponseEntity.ok(ApiResponse.success("Stepped successfully", stepInfo));
     }
 
-    @PostMapping("/reset")
-    @Operation(summary = "Reset current execution trace pointer back to the first step")
+    @PostMapping("/{sessionId}/reset")
+    @Operation(summary = "Reset session trace pointer back to the first step")
     public ResponseEntity<ApiResponse<StepDebugInfo>> reset(
-            @AuthenticationPrincipal UserDetailsImpl currentUser) {
-        String sessionKey = currentUser.getUsername();
-        StepDebugInfo stepInfo = executionService.reset(sessionKey);
+            @AuthenticationPrincipal UserDetailsImpl currentUser,
+            @PathVariable String sessionId) {
+        String username = currentUser.getUsername();
+        if (!executionService.isOwner(sessionId, username)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(ApiResponse.error("Access denied. This execution session does not belong to you."));
+        }
+        StepDebugInfo stepInfo = executionService.reset(sessionId);
         if (stepInfo == null) {
-            return ResponseEntity.badRequest().body(ApiResponse.error("No active execution session. Call /run first."));
+            return ResponseEntity.badRequest().body(ApiResponse.error("No active session trace found."));
         }
         return ResponseEntity.ok(ApiResponse.success("Trace reset successful", stepInfo));
-    }
-
-    @GetMapping("/state")
-    @Operation(summary = "Retrieve current execution step state")
-    public ResponseEntity<ApiResponse<StepDebugInfo>> state(
-            @AuthenticationPrincipal UserDetailsImpl currentUser) {
-        String sessionKey = currentUser.getUsername();
-        StepDebugInfo stepInfo = executionService.getCurrentState(sessionKey);
-        if (stepInfo == null) {
-            return ResponseEntity.badRequest().body(ApiResponse.error("No active execution session. Call /run first."));
-        }
-        return ResponseEntity.ok(ApiResponse.success("Current state retrieved", stepInfo));
     }
 }

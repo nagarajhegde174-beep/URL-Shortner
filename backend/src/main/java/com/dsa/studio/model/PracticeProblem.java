@@ -34,4 +34,7 @@ public class PracticeProblem extends BaseEntity {
 
     @Column(name = "expected_output", columnDefinition = "TEXT")
     private String expectedOutput;
+
+    @Column(name = "class_name", nullable = false)
+    private String className;
 }

@@ -6,6 +6,7 @@ import LoginPage from './pages/auth/LoginPage';
 import RegisterPage from './pages/auth/RegisterPage';
 import DashboardPage from './pages/DashboardPage';
 import DebuggerPage from './pages/DebuggerPage';
+import ArraysPage from './pages/ArraysPage';
 import './styles/auth.css';
 
 function App() {
@@ -28,6 +29,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <DebuggerPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/arrays"
+            element={
+              <ProtectedRoute>
+                <ArraysPage />
               </ProtectedRoute>
             }
           />
