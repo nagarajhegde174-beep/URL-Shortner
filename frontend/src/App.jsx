@@ -7,6 +7,8 @@ import RegisterPage from './pages/auth/RegisterPage';
 import DashboardPage from './pages/DashboardPage';
 import DebuggerPage from './pages/DebuggerPage';
 import ArraysPage from './pages/ArraysPage';
+import StringsPage from './pages/StringsPage';
+import LinkedListPage from './pages/LinkedListPage';
 import './styles/auth.css';
 
 function App() {
@@ -37,6 +39,22 @@ function App() {
             element={
               <ProtectedRoute>
                 <ArraysPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/strings"
+            element={
+              <ProtectedRoute>
+                <StringsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/linked-list"
+            element={
+              <ProtectedRoute>
+                <LinkedListPage />
               </ProtectedRoute>
             }
           />

@@ -10,4 +10,5 @@ import java.util.Optional;
 public interface AlgorithmRepository extends JpaRepository<Algorithm, Long> {
     List<Algorithm> findByCategory(String category);
     Optional<Algorithm> findByCategoryAndName(String category, String name);
+    long countByCategory(String category);
 }
