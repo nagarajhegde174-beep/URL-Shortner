@@ -204,9 +204,13 @@ public class JdiDebuggerService {
         List<StackFrameInfo> callStack = new ArrayList<>();
         List<VariableInfo> variables = new ArrayList<>();
         String explanation = "Executing line " + lineNum;
+        StackFrame topFrame = null;
 
         try {
             List<StackFrame> frames = thread.frames();
+            if (!frames.isEmpty()) {
+                topFrame = frames.get(0);
+            }
             for (StackFrame frame : frames) {
                 // Stack Frame details
                 Location loc = frame.location();
@@ -274,7 +278,7 @@ public class JdiDebuggerService {
             log.error("Failed to capture stack state: {}", e.getMessage());
         }
 
-        StepMetadata metadata = extractMetadata(className, codeLine, variables);
+        StepMetadata metadata = extractMetadata(className, codeLine, variables, topFrame);
 
         return StepDebugInfo.builder()
                 .stepNumber(stepNum)
@@ -287,74 +291,391 @@ public class JdiDebuggerService {
                 .build();
     }
 
-    private StepMetadata extractMetadata(String className, String codeLine, List<VariableInfo> variables) {
-        String dataStructure = "ARRAY";
-        
+    private StepMetadata extractMetadata(String className, String codeLine, List<VariableInfo> variables, StackFrame topFrame) {
+        // ── 1. Determine data structure from class name (explicit, not inferred) ──
+        String lowerClassName = className.toLowerCase();
+        String dataStructure;
+        if (lowerClassName.contains("linkedlist") || lowerClassName.contains("node")
+                || lowerClassName.contains("singlylist") || lowerClassName.contains("doublylist")
+                || lowerClassName.contains("circularlist") || lowerClassName.contains("listnode")) {
+            dataStructure = "LINKED_LIST";
+        } else if (lowerClassName.contains("string") || lowerClassName.contains("palindrome")
+                || lowerClassName.contains("anagram") || lowerClassName.contains("kmp")
+                || lowerClassName.contains("rabin") || lowerClassName.contains("naive")
+                || lowerClassName.contains("lps") || lowerClassName.contains("pattern")
+                || lowerClassName.contains("substring") || lowerClassName.contains("reverse")
+                || lowerClassName.contains("charfreq") || lowerClassName.contains("rotation")) {
+            dataStructure = "STRING";
+        } else {
+            dataStructure = "ARRAY";
+        }
+
+        String trimmedLine = (codeLine != null) ? codeLine.trim() : "";
+
+        // ── 2. Shared pointer extraction ──────────────────────────────────────────
         Map<String, Integer> pointers = new HashMap<>();
-        List<String> pointerNames = List.of("i", "j", "left", "right", "low", "high", "mid", "start", "end", "p1", "p2", "windowStart", "windowEnd", "minIdx", "maxIdx");
+        List<String> intPointerNames = List.of(
+            "i", "j", "left", "right", "low", "high", "mid", "start", "end",
+            "p1", "p2", "windowStart", "windowEnd", "minIdx", "maxIdx",
+            "slow", "fast", "prev", "curr", "k", "n", "m", "patternIdx", "textIdx",
+            "lpsIdx", "hashValue", "patternOffset"
+        );
         for (VariableInfo v : variables) {
-            if (pointerNames.contains(v.getName())) {
+            if (intPointerNames.contains(v.getName())) {
                 try {
                     pointers.put(v.getName(), Integer.parseInt(v.getValue()));
                 } catch (NumberFormatException ignored) {}
             }
         }
-        
+
+        // ── 3. Active array/string indices from bracket access on current line ────
         List<Integer> indices = new ArrayList<>();
-        if (codeLine != null) {
-            java.util.regex.Pattern pattern = java.util.regex.Pattern.compile("\\[([a-zA-Z0-9_]+)\\]");
-            java.util.regex.Matcher matcher = pattern.matcher(codeLine);
-            while (matcher.find()) {
-                String idxVarName = matcher.group(1);
-                if (idxVarName.matches("\\d+")) {
-                    indices.add(Integer.parseInt(idxVarName));
+        if (!trimmedLine.isEmpty()) {
+            java.util.regex.Pattern bracketPattern = java.util.regex.Pattern.compile("\\[([a-zA-Z0-9_]+)\\]");
+            java.util.regex.Matcher bracketMatcher = bracketPattern.matcher(trimmedLine);
+            while (bracketMatcher.find()) {
+                String idxToken = bracketMatcher.group(1);
+                if (idxToken.matches("\\d+")) {
+                    indices.add(Integer.parseInt(idxToken));
                 } else {
                     for (VariableInfo v : variables) {
-                        if (v.getName().equals(idxVarName)) {
-                            try {
-                                indices.add(Integer.parseInt(v.getValue()));
-                            } catch (NumberFormatException ignored) {}
+                        if (v.getName().equals(idxToken)) {
+                            try { indices.add(Integer.parseInt(v.getValue())); } catch (NumberFormatException ignored) {}
                             break;
                         }
                     }
                 }
             }
         }
-        
+
+        // ══════════════════════════════════════════════════════════════════════════
+        // LINKED LIST METADATA
+        // ══════════════════════════════════════════════════════════════════════════
+        if ("LINKED_LIST".equals(dataStructure)) {
+            return extractLinkedListMetadata(trimmedLine, variables, pointers, indices, topFrame);
+        }
+
+        // ══════════════════════════════════════════════════════════════════════════
+        // STRING METADATA
+        // ══════════════════════════════════════════════════════════════════════════
+        if ("STRING".equals(dataStructure)) {
+            return extractStringMetadata(trimmedLine, variables, pointers, indices, className);
+        }
+
+        // ══════════════════════════════════════════════════════════════════════════
+        // ARRAY METADATA (original logic, preserved)
+        // ══════════════════════════════════════════════════════════════════════════
         String operation = "READ";
-        if (codeLine != null) {
-            String trimmedLine = codeLine.trim();
-            if (trimmedLine.contains("swap") || className.toLowerCase().contains("reverse") || className.toLowerCase().contains("rotate")) {
-                if (trimmedLine.contains("arr[") && trimmedLine.contains("=")) {
-                    operation = "SWAP";
-                }
+        if (!trimmedLine.isEmpty()) {
+            if ((trimmedLine.contains("swap") || lowerClassName.contains("reverse") || lowerClassName.contains("rotate"))
+                    && trimmedLine.contains("arr[") && trimmedLine.contains("=") && !trimmedLine.contains("==")) {
+                operation = "SWAP";
             }
-            if (operation.equals("READ")) {
-                if (trimmedLine.contains("==") || trimmedLine.contains("<") || trimmedLine.contains(">") || trimmedLine.contains("!=") || trimmedLine.contains("<=") || trimmedLine.contains(">=")) {
+            if ("READ".equals(operation)) {
+                if (trimmedLine.contains("==") || trimmedLine.contains("!=")
+                        || (trimmedLine.contains("<") && !trimmedLine.contains("<<"))
+                        || (trimmedLine.contains(">") && !trimmedLine.contains(">>"))) {
                     operation = "COMPARE";
-                } else if (trimmedLine.matches(".*\\b(i|j|left|right|low|high|mid|start|end)\\s*(\\+\\+|\\-\\-|\\+=|\\-=|=).*")) {
+                } else if (trimmedLine.matches(".*\\b(i|j|left|right|low|high|mid|start|end|slow|fast)\\s*(\\+\\+|--|\\+=|-=|=).*")) {
                     operation = "POINTER_MOVE";
-                } else if (trimmedLine.contains("insert") || trimmedLine.contains("size++")) {
-                    operation = "INSERT";
-                } else if (trimmedLine.contains("delete") || trimmedLine.contains("remove") || trimmedLine.contains("size--")) {
-                    operation = "DELETE";
                 } else if (trimmedLine.contains("windowSum") || trimmedLine.contains("windowEnd") || trimmedLine.contains("windowStart")) {
                     operation = "WINDOW_UPDATE";
                 } else if (trimmedLine.contains("arr[") && trimmedLine.contains("=") && !trimmedLine.contains("==")) {
-                    int equalsIndex = trimmedLine.indexOf('=');
-                    int arrayIndex = trimmedLine.indexOf("arr[");
-                    if (arrayIndex != -1 && arrayIndex < equalsIndex) {
-                        operation = "WRITE";
-                    }
+                    int eqIdx = trimmedLine.indexOf('=');
+                    int arrIdx = trimmedLine.indexOf("arr[");
+                    if (arrIdx != -1 && arrIdx < eqIdx) operation = "WRITE";
                 }
             }
         }
-        
+
         return StepMetadata.builder()
-                .dataStructure(dataStructure)
+                .dataStructure("ARRAY")
                 .operation(operation)
                 .indices(indices)
                 .pointers(pointers)
+                .build();
+    }
+
+    private StepMetadata extractLinkedListMetadata(String trimmedLine, List<VariableInfo> variables,
+                                                   Map<String, Integer> pointers, List<Integer> indices,
+                                                   StackFrame topFrame) {
+        // ── Operation detection (explicit patterns first) ─────────────────────────
+        String operation = "TRAVERSE";
+        String nodeId = null;
+        Long objectId = null;
+        String nextNodeId = null;
+        String previousNodeId = null;
+        Map<String, String> nodePointers = new HashMap<>();
+        List<Map<String, String>> nodeSnapshot = new ArrayList<>();
+
+        if (trimmedLine.contains("new Node") || trimmedLine.contains("new ListNode")
+                || trimmedLine.contains("new SinglyNode") || trimmedLine.contains("new DoublyNode")) {
+            operation = "NODE_CREATE";
+        } else if (trimmedLine.contains(".next = null") || trimmedLine.contains("= null")) {
+            operation = "NODE_DELETE";
+        } else if (trimmedLine.contains(".next =") || trimmedLine.contains(".prev =")) {
+            operation = "POINTER_UPDATE";
+        } else if (trimmedLine.contains("head =") || trimmedLine.contains("tail =")
+                || trimmedLine.contains("current =") || trimmedLine.contains("curr =")) {
+            operation = "POINTER_UPDATE";
+        } else if (trimmedLine.contains("==") || trimmedLine.contains("!=")) {
+            operation = "COMPARE";
+        } else if (trimmedLine.contains("System.out")) {
+            operation = "TRAVERSE";
+        }
+
+        // ── Extract node reference variables (objects with address) ───────────────
+        List<String> nodePointerNames = List.of(
+            "head", "tail", "current", "curr", "prev", "next", "slow", "fast",
+            "temp", "node", "p", "q", "dummy", "newNode", "result", "merged"
+        );
+        for (VariableInfo v : variables) {
+            if (nodePointerNames.contains(v.getName()) && v.getValue() != null
+                    && !v.getValue().equals("null") && v.getMemoryAddress() != null) {
+                nodePointers.put(v.getName(), v.getMemoryAddress());
+            }
+        }
+
+        // Set primary nodeId from the active pointer
+        for (String pName : List.of("current", "curr", "head")) {
+            VariableInfo pv = variables.stream().filter(v -> v.getName().equals(pName)).findFirst().orElse(null);
+            if (pv != null && pv.getMemoryAddress() != null && !pv.getValue().equals("null")) {
+                nodeId = pv.getMemoryAddress();
+                break;
+            }
+        }
+
+        // ── Build node snapshot and extract objectId, nextNodeId, prevNodeId ──────
+        if (topFrame != null) {
+            nodeSnapshot = buildNodeSnapshot(topFrame);
+            
+            try {
+                for (LocalVariable var : topFrame.visibleVariables()) {
+                    Value val = topFrame.getValue(var);
+                    if (val instanceof ObjectReference objRef) {
+                        String addr = getOrCreateAddress(objRef);
+                        if (addr.equals(nodeId)) {
+                            objectId = objRef.uniqueID();
+                            ReferenceType refType = objRef.referenceType();
+                            Field nextField = refType.fieldByName("next");
+                            Field prevField = refType.fieldByName("prev");
+                            if (nextField != null) {
+                                Value nextVal = objRef.getValue(nextField);
+                                if (nextVal instanceof ObjectReference nextObj) {
+                                    nextNodeId = getOrCreateAddress(nextObj);
+                                }
+                            }
+                            if (prevField != null) {
+                                Value prevVal = objRef.getValue(prevField);
+                                if (prevVal instanceof ObjectReference prevObj) {
+                                    previousNodeId = getOrCreateAddress(prevObj);
+                                }
+                            }
+                            break;
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                log.warn("Error extracting active node details: {}", e.getMessage());
+            }
+        }
+
+        return StepMetadata.builder()
+                .dataStructure("LINKED_LIST")
+                .operation(operation)
+                .indices(indices)
+                .pointers(pointers)
+                .nodeId(nodeId)
+                .objectId(objectId)
+                .nextNodeId(nextNodeId)
+                .previousNodeId(previousNodeId)
+                .nodePointers(nodePointers)
+                .nodeSnapshot(nodeSnapshot)
+                .build();
+    }
+
+    private List<Map<String, String>> buildNodeSnapshot(StackFrame frame) {
+        List<Map<String, String>> snapshot = new ArrayList<>();
+        Set<Long> visited = new HashSet<>();
+        List<ObjectReference> nodesToTraverse = new ArrayList<>();
+
+        try {
+            List<LocalVariable> localVars = frame.visibleVariables();
+            for (LocalVariable var : localVars) {
+                Value val = frame.getValue(var);
+                if (val instanceof ObjectReference objRef) {
+                    String typeName = objRef.referenceType().name();
+                    if (typeName.contains("Node")) {
+                        nodesToTraverse.add(objRef);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            log.warn("Error finding local node variables for snapshot: {}", e.getMessage());
+        }
+
+        int idx = 0;
+        while (idx < nodesToTraverse.size()) {
+            ObjectReference node = nodesToTraverse.get(idx++);
+            long id = node.uniqueID();
+            if (visited.contains(id)) {
+                continue;
+            }
+            visited.add(id);
+
+            Map<String, String> nodeData = new HashMap<>();
+            String nodeIdStr = getOrCreateAddress(node);
+            nodeData.put("nodeId", nodeIdStr);
+
+            ReferenceType refType = node.referenceType();
+            Field dataField = refType.fieldByName("data");
+            Field nextField = refType.fieldByName("next");
+            Field prevField = refType.fieldByName("prev");
+
+            String valStr = "null";
+            if (dataField != null) {
+                Value dataVal = node.getValue(dataField);
+                if (dataVal != null) {
+                    valStr = dataVal.toString();
+                }
+            }
+            nodeData.put("data", valStr);
+
+            String nextIdStr = null;
+            if (nextField != null) {
+                Value nextVal = node.getValue(nextField);
+                if (nextVal instanceof ObjectReference nextObj) {
+                    nextIdStr = getOrCreateAddress(nextObj);
+                    if (!visited.contains(nextObj.uniqueID())) {
+                        nodesToTraverse.add(nextObj);
+                    }
+                }
+            }
+            nodeData.put("nextNodeId", nextIdStr);
+
+            String prevIdStr = null;
+            if (prevField != null) {
+                Value prevVal = node.getValue(prevField);
+                if (prevVal instanceof ObjectReference prevObj) {
+                    prevIdStr = getOrCreateAddress(prevObj);
+                    if (!visited.contains(prevObj.uniqueID())) {
+                        nodesToTraverse.add(prevObj);
+                    }
+                }
+            }
+            nodeData.put("prevNodeId", prevIdStr);
+
+            snapshot.add(nodeData);
+        }
+        return snapshot;
+    }
+
+    private StepMetadata extractStringMetadata(String trimmedLine, List<VariableInfo> variables,
+                                               Map<String, Integer> pointers, List<Integer> indices,
+                                               String className) {
+        // ── Operation detection (explicit string patterns first) ──────────────────
+        String operation = "READ";
+
+        if (trimmedLine.contains("charAt(") || trimmedLine.contains("s[") || trimmedLine.contains("str[")) {
+            operation = "READ";
+        }
+        if (trimmedLine.contains("==") || trimmedLine.contains("equals(") || trimmedLine.contains("compareTo(")
+                || trimmedLine.contains("charAt") && (trimmedLine.contains("<") || trimmedLine.contains(">"))) {
+            operation = "COMPARE";
+        }
+        // Pattern matching specific
+        if (trimmedLine.contains("found = true") || trimmedLine.contains("matched = true")
+                || trimmedLine.contains("return true") && className.toLowerCase().contains("palindrome")) {
+            operation = "MATCH";
+        }
+        if (trimmedLine.contains("found = false") || trimmedLine.contains("matched = false")
+                || trimmedLine.contains("mismatch")) {
+            operation = "MISMATCH";
+        }
+        if (trimmedLine.matches(".*\\b(i|j|left|right|patternIdx|textIdx|lpsIdx|windowStart|windowEnd)\\s*(\\+\\+|--|\\+=|-=|=).*")) {
+            operation = "POINTER_MOVE";
+        }
+        if (trimmedLine.contains("windowSum") || trimmedLine.contains("maxLen") || trimmedLine.contains("windowEnd")
+                || trimmedLine.contains("windowStart")) {
+            operation = "WINDOW_UPDATE";
+        }
+        if (trimmedLine.contains("patternShift") || trimmedLine.contains("shift")
+                || (trimmedLine.contains("j =") && className.toLowerCase().contains("kmp"))) {
+            operation = "PATTERN_SHIFT";
+        }
+        if (trimmedLine.contains("hash") || trimmedLine.contains("rollingHash") || trimmedLine.contains("hashCode")) {
+            operation = "HASH_COMPUTE";
+        }
+
+        // ── Character states: map index → state token ─────────────────────────────
+        Map<Integer, String> characterStates = new HashMap<>();
+        // Populate active indices as COMPARE state when we're doing comparisons
+        for (Integer idx : indices) {
+            if ("COMPARE".equals(operation)) {
+                characterStates.put(idx, "COMPARE");
+            } else if ("MATCH".equals(operation)) {
+                characterStates.put(idx, "MATCH");
+            } else if ("MISMATCH".equals(operation)) {
+                characterStates.put(idx, "MISMATCH");
+            } else if ("WINDOW_UPDATE".equals(operation)) {
+                characterStates.put(idx, "WINDOW");
+            } else {
+                characterStates.put(idx, "ACTIVE");
+            }
+        }
+
+        // ── Pattern and offset from variables ────────────────────────────────────
+        String pattern = null;
+        Integer patternOffset = null;
+        Long rollingHash = null;
+        List<Integer> lpsArray = null;
+
+        for (VariableInfo v : variables) {
+            switch (v.getName()) {
+                case "pattern", "pat" -> pattern = v.getValue();
+                case "patternOffset", "shift", "textIdx" -> {
+                    try { patternOffset = Integer.parseInt(v.getValue()); } catch (NumberFormatException ignored) {}
+                }
+                case "rollingHash", "hash", "hashValue", "textHash" -> {
+                    try { rollingHash = Long.parseLong(v.getValue()); } catch (NumberFormatException ignored) {}
+                }
+            }
+        }
+
+        // LPS array — detect variable named lps that serializes as [n1, n2, ...]
+        for (VariableInfo v : variables) {
+            if ("lps".equals(v.getName()) && v.getValue() != null && v.getValue().startsWith("[")) {
+                try {
+                    String raw = v.getValue().replaceAll("[\\[\\]\\s]", "");
+                    if (!raw.isEmpty()) {
+                        lpsArray = new ArrayList<>();
+                        for (String s : raw.split(",")) {
+                            lpsArray.add(Integer.parseInt(s.trim()));
+                        }
+                    }
+                } catch (NumberFormatException ignored) {}
+            }
+        }
+
+        // ── Window boundaries from pointer vars ───────────────────────────────────
+        if (pointers.containsKey("windowStart") && pointers.containsKey("windowEnd")) {
+            int ws = pointers.get("windowStart");
+            int we = pointers.get("windowEnd");
+            for (int k = ws; k <= we; k++) {
+                characterStates.put(k, "WINDOW");
+            }
+        }
+
+        return StepMetadata.builder()
+                .dataStructure("STRING")
+                .operation(operation)
+                .indices(indices)
+                .pointers(pointers)
+                .characterStates(characterStates)
+                .lpsArray(lpsArray)
+                .pattern(pattern)
+                .patternOffset(patternOffset)
+                .rollingHash(rollingHash)
                 .build();
     }
 

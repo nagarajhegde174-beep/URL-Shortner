@@ -12,7 +12,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
-import java.util.List;
 
 @Component
 @RequiredArgsConstructor
@@ -39,10 +38,24 @@ public class DataInitializer implements CommandLineRunner {
         if (algorithmRepository.count() == 0) {
             seedAlgorithms();
         }
+        // Seed String and Linked List algorithms if not yet seeded
+        if (algorithmRepository.countByCategory("STRING") == 0) {
+            seedStringAlgorithms();
+        }
+        if (algorithmRepository.countByCategory("LINKED_LIST") == 0) {
+            seedLinkedListAlgorithms();
+        }
 
         // 3. Seed Practice Problems
         if (practiceProblemRepository.count() == 0) {
             seedPracticeProblems();
+        }
+        // Seed String and Linked List practice problems if not yet seeded
+        if (practiceProblemRepository.countByCategory("STRING") == 0) {
+            seedStringPracticeProblems();
+        }
+        if (practiceProblemRepository.countByCategory("LINKED_LIST") == 0) {
+            seedLinkedListPracticeProblems();
         }
     }
 
@@ -560,6 +573,482 @@ public class DataInitializer implements CommandLineRunner {
                 "WindowMax");
 
         log.info("Practice problems seeded successfully.");
+    }
+
+    private void seedStringAlgorithms() {
+        log.info("Seeding String algorithms...");
+
+        saveAlgorithm("Traversal", "Iterate through each character of a string.", "STRING", "O(N)", "O(1)", "EASY",
+                "public class StringTraversal {\n" +
+                "    public static void main(String[] args) {\n" +
+                "        String str = \"Hello World\";\n" +
+                "        int iterations = 0;\n" +
+                "        for (int i = 0; i < str.length(); i++) {\n" +
+                "            iterations++;\n" +
+                "            char c = str.charAt(i);\n" +
+                "            System.out.println(\"Character at \" + i + \": \" + c);\n" +
+                "        }\n" +
+                "    }\n" +
+                "}");
+
+        saveAlgorithm("Reverse String", "Reverse a string using two pointers.", "STRING", "O(N)", "O(N)", "EASY",
+                "public class StringReverse {\n" +
+                "    public static void main(String[] args) {\n" +
+                "        String str = \"Antigravity\";\n" +
+                "        char[] chars = str.toCharArray();\n" +
+                "        int left = 0;\n" +
+                "        int right = chars.length - 1;\n" +
+                "        while (left < right) {\n" +
+                "            char temp = chars[left];\n" +
+                "            chars[left] = chars[right];\n" +
+                "            chars[right] = temp;\n" +
+                "            left++;\n" +
+                "            right--;\n" +
+                "        }\n" +
+                "        System.out.println(new String(chars));\n" +
+                "    }\n" +
+                "}");
+
+        saveAlgorithm("Palindrome", "Check if a string is a palindrome using two pointers.", "STRING", "O(N)", "O(1)", "EASY",
+                "public class StringPalindrome {\n" +
+                "    public static void main(String[] args) {\n" +
+                "        String str = \"racecar\";\n" +
+                "        int left = 0;\n" +
+                "        int right = str.length() - 1;\n" +
+                "        boolean isPal = true;\n" +
+                "        while (left < right) {\n" +
+                "            if (str.charAt(left) != str.charAt(right)) {\n" +
+                "                isPal = false;\n" +
+                "                break;\n" +
+                "            }\n" +
+                "            left++;\n" +
+                "            right--;\n" +
+                "        }\n" +
+                "        System.out.println(\"Is Palindrome: \" + isPal);\n" +
+                "    }\n" +
+                "}");
+
+        saveAlgorithm("Character Frequency", "Count character occurrences in a string.", "STRING", "O(N)", "O(1)", "EASY",
+                "public class StringCharFreq {\n" +
+                "    public static void main(String[] args) {\n" +
+                "        String str = \"success\";\n" +
+                "        int[] freq = new int[256];\n" +
+                "        for (int i = 0; i < str.length(); i++) {\n" +
+                "            freq[str.charAt(i)]++;\n" +
+                "        }\n" +
+                "        System.out.println(\"Frequency of s: \" + freq['s']);\n" +
+                "    }\n" +
+                "}");
+
+        saveAlgorithm("Anagram", "Check if two strings are anagrams.", "STRING", "O(N)", "O(1)", "EASY",
+                "public class StringAnagram {\n" +
+                "    public static void main(String[] args) {\n" +
+                "        String s1 = \"listen\";\n" +
+                "        String s2 = \"silent\";\n" +
+                "        boolean isAnagram = true;\n" +
+                "        if (s1.length() != s2.length()) {\n" +
+                "            isAnagram = false;\n" +
+                "        } else {\n" +
+                "            int[] counts = new int[256];\n" +
+                "            for (int i = 0; i < s1.length(); i++) {\n" +
+                "                counts[s1.charAt(i)]++;\n" +
+                "                counts[s2.charAt(i)]--;\n" +
+                "            }\n" +
+                "            for (int c : counts) {\n" +
+                "                if (c != 0) { isAnagram = false; break; }\n" +
+                "            }\n" +
+                "        }\n" +
+                "        System.out.println(\"Is Anagram: \" + isAnagram);\n" +
+                "    }\n" +
+                "}");
+
+        saveAlgorithm("Naive Pattern Matching", "Brute-force pattern search.", "STRING", "O(N*M)", "O(1)", "EASY",
+                "public class StringNaiveMatch {\n" +
+                "    public static void main(String[] args) {\n" +
+                "        String text = \"AABAACAADAABAAABDF\";\n" +
+                "        String pattern = \"AABA\";\n" +
+                "        int n = text.length();\n" +
+                "        int m = pattern.length();\n" +
+                "        for (int i = 0; i <= n - m; i++) {\n" +
+                "            int j;\n" +
+                "            for (j = 0; j < m; j++) {\n" +
+                "                if (text.charAt(i + j) != pattern.charAt(j)) break;\n" +
+                "            }\n" +
+                "            if (j == m) System.out.println(\"Pattern found at: \" + i);\n" +
+                "        }\n" +
+                "    }\n" +
+                "}");
+
+        saveAlgorithm("KMP Search", "Knuth-Morris-Pratt search.", "STRING", "O(N+M)", "O(M)", "MEDIUM",
+                "public class StringKmp {\n" +
+                "    public static void main(String[] args) {\n" +
+                "        String text = \"ABABDABACDABABCABAB\";\n" +
+                "        String pattern = \"ABABCABAB\";\n" +
+                "        int[] lps = {0, 0, 1, 2, 0, 1, 2, 3, 4};\n" +
+                "        int i = 0, j = 0;\n" +
+                "        while (i < text.length()) {\n" +
+                "            if (pattern.charAt(j) == text.charAt(i)) {\n" +
+                "                i++; j++;\n" +
+                "            }\n" +
+                "            if (j == pattern.length()) {\n" +
+                "                System.out.println(\"Found pattern at: \" + (i - j));\n" +
+                "                j = lps[j - 1];\n" +
+                "            } else if (i < text.length() && pattern.charAt(j) != text.charAt(i)) {\n" +
+                "                if (j != 0) j = lps[j - 1];\n" +
+                "                else i++;\n" +
+                "            }\n" +
+                "        }\n" +
+                "    }\n" +
+                "}");
+    }
+
+    private void seedLinkedListAlgorithms() {
+        log.info("Seeding Linked List algorithms...");
+
+        saveAlgorithm("Singly Linked List", "Create and traverse a Singly Linked List.", "LINKED_LIST", "O(N)", "O(N)", "EASY",
+                "public class SinglyLinkedList {\n" +
+                "    static class Node {\n" +
+                "        int data;\n" +
+                "        Node next;\n" +
+                "        Node(int data) { this.data = data; }\n" +
+                "    }\n" +
+                "    public static void main(String[] args) {\n" +
+                "        Node head = new Node(10);\n" +
+                "        head.next = new Node(20);\n" +
+                "        head.next.next = new Node(30);\n" +
+                "        Node current = head;\n" +
+                "        while (current != null) {\n" +
+                "            System.out.print(current.data + \" -> \");\n" +
+                "            current = current.next;\n" +
+                "        }\n" +
+                "        System.out.println(\"null\");\n" +
+                "    }\n" +
+                "}");
+
+        saveAlgorithm("Doubly Linked List", "Create and traverse a Doubly Linked List.", "LINKED_LIST", "O(N)", "O(N)", "EASY",
+                "public class DoublyLinkedList {\n" +
+                "    static class Node {\n" +
+                "        int data;\n" +
+                "        Node next, prev;\n" +
+                "        Node(int data) { this.data = data; }\n" +
+                "    }\n" +
+                "    public static void main(String[] args) {\n" +
+                "        Node head = new Node(10);\n" +
+                "        Node second = new Node(20);\n" +
+                "        head.next = second;\n" +
+                "        second.prev = head;\n" +
+                "        Node current = head;\n" +
+                "        while (current != null) {\n" +
+                "            System.out.println(\"Node: \" + current.data);\n" +
+                "            current = current.next;\n" +
+                "        }\n" +
+                "    }\n" +
+                "}");
+
+        saveAlgorithm("Insert at Beginning", "Insert a node at the start of a Linked List.", "LINKED_LIST", "O(1)", "O(1)", "EASY",
+                "public class LinkedListInsertBegin {\n" +
+                "    static class Node {\n" +
+                "        int data;\n" +
+                "        Node next;\n" +
+                "        Node(int data) { this.data = data; }\n" +
+                "    }\n" +
+                "    public static void main(String[] args) {\n" +
+                "        Node head = new Node(20);\n" +
+                "        head.next = new Node(30);\n" +
+                "        Node newNode = new Node(10);\n" +
+                "        newNode.next = head;\n" +
+                "        head = newNode;\n" +
+                "        System.out.println(\"Head value: \" + head.data);\n" +
+                "    }\n" +
+                "}");
+
+        saveAlgorithm("Delete Node", "Delete a node from a Linked List.", "LINKED_LIST", "O(N)", "O(1)", "EASY",
+                "public class LinkedListDelete {\n" +
+                "    static class Node {\n" +
+                "        int data;\n" +
+                "        Node next;\n" +
+                "        Node(int data) { this.data = data; }\n" +
+                "    }\n" +
+                "    public static void main(String[] args) {\n" +
+                "        Node head = new Node(10);\n" +
+                "        head.next = new Node(20);\n" +
+                "        head.next.next = new Node(30);\n" +
+                "        Node current = head;\n" +
+                "        if (current.next != null && current.next.data == 20) {\n" +
+                "            current.next = current.next.next;\n" +
+                "        }\n" +
+                "    }\n" +
+                "}");
+
+        saveAlgorithm("Reverse List", "Reverse a Singly Linked List iteratively.", "LINKED_LIST", "O(N)", "O(1)", "MEDIUM",
+                "public class LinkedListReverse {\n" +
+                "    static class Node {\n" +
+                "        int data;\n" +
+                "        Node next;\n" +
+                "        Node(int data) { this.data = data; }\n" +
+                "    }\n" +
+                "    public static void main(String[] args) {\n" +
+                "        Node head = new Node(1);\n" +
+                "        head.next = new Node(2);\n" +
+                "        head.next.next = new Node(3);\n" +
+                "        Node prev = null;\n" +
+                "        Node curr = head;\n" +
+                "        while (curr != null) {\n" +
+                "            Node next = curr.next;\n" +
+                "            curr.next = prev;\n" +
+                "            prev = curr;\n" +
+                "            curr = next;\n" +
+                "        }\n" +
+                "        head = prev;\n" +
+                "        System.out.println(\"Reversed Head: \" + head.data);\n" +
+                "    }\n" +
+                "}");
+
+        saveAlgorithm("Detect Cycle", "Detect cycle using Floyd's Tortoise and Hare.", "LINKED_LIST", "O(N)", "O(1)", "MEDIUM",
+                "public class LinkedListCycle {\n" +
+                "    static class Node {\n" +
+                "        int data;\n" +
+                "        Node next;\n" +
+                "        Node(int data) { this.data = data; }\n" +
+                "    }\n" +
+                "    public static void main(String[] args) {\n" +
+                "        Node head = new Node(1);\n" +
+                "        head.next = new Node(2);\n" +
+                "        head.next.next = new Node(3);\n" +
+                "        head.next.next.next = head.next; // Create cycle\n" +
+                "        Node slow = head;\n" +
+                "        Node fast = head;\n" +
+                "        boolean hasCycle = false;\n" +
+                "        while (fast != null && fast.next != null) {\n" +
+                "            slow = slow.next;\n" +
+                "            fast = fast.next.next;\n" +
+                "            if (slow == fast) {\n" +
+                "                hasCycle = true;\n" +
+                "                break;\n" +
+                "            }\n" +
+                "        }\n" +
+                "        System.out.println(\"Has Cycle: \" + hasCycle);\n" +
+                "    }\n" +
+                "}");
+    }
+
+    private void seedStringPracticeProblems() {
+        log.info("Seeding String practice problems...");
+
+        saveProblem("Reverse a String",
+                "Write a program to reverse a given string and print the result.",
+                "EASY", "STRING",
+                "public class PracticeStringReverse {\n" +
+                "    public static void main(String[] args) {\n" +
+                "        String str = \"hello\";\n" +
+                "        // TODO: Reverse the string\n\n" +
+                "    }\n" +
+                "}",
+                "public class PracticeStringReverse {\n" +
+                "    public static void main(String[] args) {\n" +
+                "        String str = \"hello\";\n" +
+                "        StringBuilder sb = new StringBuilder(str);\n" +
+                "        System.out.println(sb.reverse().toString());\n" +
+                "    }\n" +
+                "}",
+                "olleh",
+                "PracticeStringReverse");
+
+        saveProblem("Valid Anagram Check",
+                "Write a program to check if two strings are valid anagrams of each other (print true or false).",
+                "EASY", "STRING",
+                "public class PracticeAnagram {\n" +
+                "    public static void main(String[] args) {\n" +
+                "        String s1 = \"anagram\";\n" +
+                "        String s2 = \"nagaram\";\n" +
+                "        boolean result = false;\n" +
+                "        // TODO: Check if s1 and s2 are anagrams\n\n" +
+                "        System.out.println(result);\n" +
+                "    }\n" +
+                "}",
+                "public class PracticeAnagram {\n" +
+                "    public static void main(String[] args) {\n" +
+                "        String s1 = \"anagram\";\n" +
+                "        String s2 = \"nagaram\";\n" +
+                "        boolean result = true;\n" +
+                "        if (s1.length() != s2.length()) {\n" +
+                "            result = false;\n" +
+                "        } else {\n" +
+                "            int[] counts = new int[256];\n" +
+                "            for (int i = 0; i < s1.length(); i++) {\n" +
+                "                counts[s1.charAt(i)]++;\n" +
+                "                counts[s2.charAt(i)]--;\n" +
+                "            }\n" +
+                "            for (int c : counts) {\n" +
+                "                if (c != 0) { result = false; break; }\n" +
+                "            }\n" +
+                "        }\n" +
+                "        System.out.println(result);\n" +
+                "    }\n" +
+                "}",
+                "true",
+                "PracticeAnagram");
+
+        saveProblem("Valid Palindrome Check",
+                "Write a program to check if a string is a palindrome (ignoring non-alphanumeric chars and case).",
+                "MEDIUM", "STRING",
+                "public class PracticePalindrome {\n" +
+                "    public static void main(String[] args) {\n" +
+                "        String str = \"A man, a plan, a canal: Panama\";\n" +
+                "        boolean result = false;\n" +
+                "        // TODO: Validate palindrome\n\n" +
+                "        System.out.println(result);\n" +
+                "    }\n" +
+                "}",
+                "public class PracticePalindrome {\n" +
+                "    public static void main(String[] args) {\n" +
+                "        String str = \"A man, a plan, a canal: Panama\";\n" +
+                "        String clean = str.replaceAll(\"[^a-zA-Z0-9]\", \"\").toLowerCase();\n" +
+                "        boolean result = true;\n" +
+                "        int left = 0, right = clean.length() - 1;\n" +
+                "        while (left < right) {\n" +
+                "            if (clean.charAt(left) != clean.charAt(right)) {\n" +
+                "                result = false;\n" +
+                "                break;\n" +
+                "            }\n" +
+                "            left++; right--;\n" +
+                "        }\n" +
+                "        System.out.println(result);\n" +
+                "    }\n" +
+                "}",
+                "true",
+                "PracticePalindrome");
+    }
+
+    private void seedLinkedListPracticeProblems() {
+        log.info("Seeding LinkedList practice problems...");
+
+        saveProblem("Length of Linked List",
+                "Write a program to calculate the length of a linked list.",
+                "EASY", "LINKED_LIST",
+                "public class PracticeListLength {\n" +
+                "    static class Node {\n" +
+                "        int data;\n" +
+                "        Node next;\n" +
+                "        Node(int data) { this.data = data; }\n" +
+                "    }\n" +
+                "    public static void main(String[] args) {\n" +
+                "        Node head = new Node(10);\n" +
+                "        head.next = new Node(20);\n" +
+                "        head.next.next = new Node(30);\n" +
+                "        int length = 0;\n" +
+                "        // TODO: Calculate length\n\n" +
+                "        System.out.println(length);\n" +
+                "    }\n" +
+                "}",
+                "public class PracticeListLength {\n" +
+                "    static class Node {\n" +
+                "        int data;\n" +
+                "        Node next;\n" +
+                "        Node(int data) { this.data = data; }\n" +
+                "    }\n" +
+                "    public static void main(String[] args) {\n" +
+                "        Node head = new Node(10);\n" +
+                "        head.next = new Node(20);\n" +
+                "        head.next.next = new Node(30);\n" +
+                "        int length = 0;\n" +
+                "        Node current = head;\n" +
+                "        while (current != null) {\n" +
+                "            length++;\n" +
+                "            current = current.next;\n" +
+                "        }\n" +
+                "        System.out.println(length);\n" +
+                "    }\n" +
+                "}",
+                "3",
+                "PracticeListLength");
+
+        saveProblem("Middle of LinkedList",
+                "Write a program to find the data value of the middle node of a linked list (for even size, second mid).",
+                "EASY", "LINKED_LIST",
+                "public class PracticeListMiddle {\n" +
+                "    static class Node {\n" +
+                "        int data;\n" +
+                "        Node next;\n" +
+                "        Node(int data) { this.data = data; }\n" +
+                "    }\n" +
+                "    public static void main(String[] args) {\n" +
+                "        Node head = new Node(1);\n" +
+                "        head.next = new Node(2);\n" +
+                "        head.next.next = new Node(3);\n" +
+                "        head.next.next.next = new Node(4);\n" +
+                "        int middleVal = -1;\n" +
+                "        // TODO: Find middle node data\n\n" +
+                "        System.out.println(middleVal);\n" +
+                "    }\n" +
+                "}",
+                "public class PracticeListMiddle {\n" +
+                "    static class Node {\n" +
+                "        int data;\n" +
+                "        Node next;\n" +
+                "        Node(int data) { this.data = data; }\n" +
+                "    }\n" +
+                "    public static void main(String[] args) {\n" +
+                "        Node head = new Node(1);\n" +
+                "        head.next = new Node(2);\n" +
+                "        head.next.next = new Node(3);\n" +
+                "        head.next.next.next = new Node(4);\n" +
+                "        Node slow = head;\n" +
+                "        Node fast = head;\n" +
+                "        while (fast != null && fast.next != null) {\n" +
+                "            slow = slow.next;\n" +
+                "            fast = fast.next.next;\n" +
+                "        }\n" +
+                "        System.out.println(slow.data);\n" +
+                "    }\n" +
+                "}",
+                "3",
+                "PracticeListMiddle");
+
+        saveProblem("Detect Loop in LinkedList",
+                "Write a program to check if a linked list contains a cycle (print true or false).",
+                "MEDIUM", "LINKED_LIST",
+                "public class PracticeListLoop {\n" +
+                "    static class Node {\n" +
+                "        int data;\n" +
+                "        Node next;\n" +
+                "        Node(int data) { this.data = data; }\n" +
+                "    }\n" +
+                "    public static void main(String[] args) {\n" +
+                "        Node head = new Node(1);\n" +
+                "        head.next = new Node(2);\n" +
+                "        head.next.next = head; // Loop\n" +
+                "        boolean result = false;\n" +
+                "        // TODO: Detect cycle\n\n" +
+                "        System.out.println(result);\n" +
+                "    }\n" +
+                "}",
+                "public class PracticeListLoop {\n" +
+                "    static class Node {\n" +
+                "        int data;\n" +
+                "        Node next;\n" +
+                "        Node(int data) { this.data = data; }\n" +
+                "    }\n" +
+                "    public static void main(String[] args) {\n" +
+                "        Node head = new Node(1);\n" +
+                "        head.next = new Node(2);\n" +
+                "        head.next.next = head;\n" +
+                "        Node slow = head;\n" +
+                "        Node fast = head;\n" +
+                "        boolean hasCycle = false;\n" +
+                "        while (fast != null && fast.next != null) {\n" +
+                "            slow = slow.next;\n" +
+                "            fast = fast.next.next;\n" +
+                "            if (slow == fast) {\n" +
+                "                hasCycle = true;\n" +
+                "                break;\n" +
+                "            }\n" +
+                "        }\n" +
+                "        System.out.println(hasCycle);\n" +
+                "    }\n" +
+                "}",
+                "true",
+                "PracticeListLoop");
     }
 
     private void saveProblem(String title, String desc, String diff, String cat, String starter, String soln, String output, String className) {

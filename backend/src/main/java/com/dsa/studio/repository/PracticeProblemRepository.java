@@ -8,4 +8,5 @@ import java.util.List;
 @Repository
 public interface PracticeProblemRepository extends JpaRepository<PracticeProblem, Long> {
     List<PracticeProblem> findByCategory(String category);
+    long countByCategory(String category);
 }
