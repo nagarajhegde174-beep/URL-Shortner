@@ -26,7 +26,7 @@ const DashboardPage = () => {
         <div className="dashboard-hero">
           <h1>🚀 DSA Studio</h1>
           <p>Your complete Java learning and debugging platform.</p>
-          <p className="coming-soon">Arrays, Strings, and Linked Lists Live — Visualize, Practice &amp; Quiz!</p>
+          <p className="coming-soon">Arrays, Strings, Linked Lists, Stacks, and Queues Live — Visualize, Practice &amp; Quiz!</p>
         </div>
         <div className="dashboard-cards">
           <div className="dash-card" onClick={() => navigate('/debugger')}>
@@ -48,6 +48,16 @@ const DashboardPage = () => {
             <span className="card-icon">🔗</span>
             <h3>Linked Lists</h3>
             <p>Singly, Doubly, and Circular list structures</p>
+          </div>
+          <div className="dash-card" onClick={() => navigate('/stack')}>
+            <span className="card-icon">🥞</span>
+            <h3>Stacks Module</h3>
+            <p>LIFO structures, NGE, Balanced Parentheses</p>
+          </div>
+          <div className="dash-card" onClick={() => navigate('/queue')}>
+            <span className="card-icon">👥</span>
+            <h3>Queues Module</h3>
+            <p>FIFO queues, Circular Queue, PriorityQueue</p>
           </div>
         </div>
       </main>
