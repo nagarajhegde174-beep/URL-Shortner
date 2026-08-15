@@ -4,6 +4,7 @@ import ArrayVisualizer from './components/ArrayVisualizer';
 import StackVisualizer from './components/StackVisualizer';
 import QueueVisualizer from './components/QueueVisualizer';
 import LinkedListVisualizer from './components/LinkedListVisualizer';
+import StringVisualizer from './components/StringVisualizer';
 import '../../styles/visualization.css';
 
 const VisualizationEngine = ({ className }) => {
@@ -17,18 +18,36 @@ const VisualizationEngine = ({ className }) => {
     );
   }
 
-  // Determine which visualizer to render based on the current template/class name
-  // This is a simple heuristic; in the future, we could infer it from the variables
+  // Determine which visualizer to render based on metadata dataStructure priority or className heuristic
   let VisualizerComponent = null;
+  const ds = stepInfo.metadata?.dataStructure;
 
-  if (className.toLowerCase().includes('array')) {
-    VisualizerComponent = ArrayVisualizer;
-  } else if (className.toLowerCase().includes('stack') || className.toLowerCase().includes('recursion')) {
-    VisualizerComponent = StackVisualizer;
-  } else if (className.toLowerCase().includes('queue')) {
-    VisualizerComponent = QueueVisualizer;
-  } else if (className.toLowerCase().includes('object') || className.toLowerCase().includes('linked')) {
-    VisualizerComponent = LinkedListVisualizer;
+  if (ds) {
+    if (ds === 'STACK') {
+      VisualizerComponent = StackVisualizer;
+    } else if (ds === 'QUEUE') {
+      VisualizerComponent = QueueVisualizer;
+    } else if (ds === 'LINKED_LIST') {
+      VisualizerComponent = LinkedListVisualizer;
+    } else if (ds === 'STRING') {
+      VisualizerComponent = StringVisualizer;
+    } else if (ds === 'ARRAY') {
+      VisualizerComponent = ArrayVisualizer;
+    }
+  }
+
+  if (!VisualizerComponent) {
+    if (className.toLowerCase().includes('array')) {
+      VisualizerComponent = ArrayVisualizer;
+    } else if (className.toLowerCase().includes('stack') || className.toLowerCase().includes('recursion')) {
+      VisualizerComponent = StackVisualizer;
+    } else if (className.toLowerCase().includes('queue')) {
+      VisualizerComponent = QueueVisualizer;
+    } else if (className.toLowerCase().includes('string') || className.toLowerCase().includes('char')) {
+      VisualizerComponent = StringVisualizer;
+    } else if (className.toLowerCase().includes('object') || className.toLowerCase().includes('linked')) {
+      VisualizerComponent = LinkedListVisualizer;
+    }
   }
 
   return (

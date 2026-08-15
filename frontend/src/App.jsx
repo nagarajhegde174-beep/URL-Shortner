@@ -9,6 +9,8 @@ import DebuggerPage from './pages/DebuggerPage';
 import ArraysPage from './pages/ArraysPage';
 import StringsPage from './pages/StringsPage';
 import LinkedListPage from './pages/LinkedListPage';
+import StackPage from './pages/StackPage';
+import QueuePage from './pages/QueuePage';
 import './styles/auth.css';
 
 function App() {
@@ -55,6 +57,22 @@ function App() {
             element={
               <ProtectedRoute>
                 <LinkedListPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/stack"
+            element={
+              <ProtectedRoute>
+                <StackPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/queue"
+            element={
+              <ProtectedRoute>
+                <QueuePage />
               </ProtectedRoute>
             }
           />

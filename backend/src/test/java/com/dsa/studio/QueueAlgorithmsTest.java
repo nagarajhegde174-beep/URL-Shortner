@@ -4,11 +4,7 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 import java.util.*;
 
-/**
- * Phase 7 — Queue Algorithm Tests
- * Tests core Queue algorithms and DSA logic used in the Queue learning module.
- * These are pure algorithmic tests (no Spring context needed).
- */
+
 class QueueAlgorithmsTest {
 
     // ── Enqueue / Dequeue Tests ───────────────────────────────────────────────
@@ -87,7 +83,6 @@ class QueueAlgorithmsTest {
         cq.enqueue(10); cq.enqueue(20); cq.enqueue(30);
         assertEquals(10, cq.dequeue());
         cq.enqueue(40); cq.enqueue(50);
-        assertEquals(3, cq.size); // 20, 30, 40, 50 → actually we lost slot: 20,30,40,50 size=4 but dequeued once
         // After enqueue 10,20,30 (size=3), dequeue (size=2), enqueue 40,50 (size=4)
         // Size should be 4
         assertEquals(4, cq.size);

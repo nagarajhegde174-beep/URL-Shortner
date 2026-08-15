@@ -293,14 +293,6 @@ public class JdiDebuggerService {
 
     private StepMetadata extractMetadata(String className, String codeLine, List<VariableInfo> variables, StackFrame topFrame) {
         String lowerClassName = className.toLowerCase();
-
-        // ══════════════════════════════════════════════════════════════════════
-        // PRIORITY 1 & 2: JDI variable/type inspection — inspect declared types
-        // of local variables BEFORE falling back to class-name heuristics.
-        // This is the most reliable detection because the user's code may name
-        // their class anything, but the type of their Stack/Queue variable is
-        // always explicit (java.util.Stack, java.util.Deque, java.util.Queue…).
-        // ══════════════════════════════════════════════════════════════════════
         boolean hasStackVar = false;
         boolean hasQueueVar = false;
         boolean hasPriorityQueueVar = false;
@@ -312,8 +304,7 @@ public class JdiDebuggerService {
                             || typeName.contains("arraydeque")) {
                         hasStackVar = true;
                     }
-                    if (typeName.contains("queue") || typeName.contains("linkedlist")
-                            || typeName.contains("priorityqueue") || typeName.contains("circularqueue")) {
+                    if (typeName.contains("queue") || typeName.contains("priorityqueue") || typeName.contains("circularqueue")) {
                         hasQueueVar = true;
                     }
                     if (typeName.contains("priorityqueue")) {
@@ -322,8 +313,8 @@ public class JdiDebuggerService {
                 }
             } catch (Exception ignored) {}
         }
-        // Also check variables list (fallback when topFrame is unavailable)
-        if (!hasStackVar && !hasQueueVar) {
+        
+        if (!hasStackVar && !hasQueueVar && variables != null) {
             for (VariableInfo v : variables) {
                 String type = v.getType() != null ? v.getType().toLowerCase() : "";
                 if (type.contains("stack") || type.contains("deque") || type.contains("arraydeque")) {
@@ -337,11 +328,7 @@ public class JdiDebuggerService {
                 }
             }
         }
-
-        // ══════════════════════════════════════════════════════════════════════
-        // PRIORITY 3: Class-name heuristic (FINAL fallback only)
-        // Applied only when variable inspection did not already identify the DS.
-        // ══════════════════════════════════════════════════════════════════════
+        
         String dataStructure;
         if (hasStackVar && !hasQueueVar) {
             dataStructure = "STACK";
@@ -381,11 +368,13 @@ public class JdiDebuggerService {
             "slow", "fast", "prev", "curr", "k", "n", "m", "patternIdx", "textIdx",
             "lpsIdx", "hashValue", "patternOffset"
         );
-        for (VariableInfo v : variables) {
-            if (intPointerNames.contains(v.getName())) {
-                try {
-                    pointers.put(v.getName(), Integer.parseInt(v.getValue()));
-                } catch (NumberFormatException ignored) {}
+        if (variables != null) {
+            for (VariableInfo v : variables) {
+                if (intPointerNames.contains(v.getName())) {
+                    try {
+                        pointers.put(v.getName(), Integer.parseInt(v.getValue()));
+                    } catch (NumberFormatException ignored) {}
+                }
             }
         }
 
@@ -398,7 +387,7 @@ public class JdiDebuggerService {
                 String idxToken = bracketMatcher.group(1);
                 if (idxToken.matches("\\d+")) {
                     indices.add(Integer.parseInt(idxToken));
-                } else {
+                } else if (variables != null) {
                     for (VariableInfo v : variables) {
                         if (v.getName().equals(idxToken)) {
                             try { indices.add(Integer.parseInt(v.getValue())); } catch (NumberFormatException ignored) {}
