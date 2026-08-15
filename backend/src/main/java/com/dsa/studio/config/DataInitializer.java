@@ -45,6 +45,12 @@ public class DataInitializer implements CommandLineRunner {
         if (algorithmRepository.countByCategory("LINKED_LIST") == 0) {
             seedLinkedListAlgorithms();
         }
+        if (algorithmRepository.countByCategory("STACK") == 0) {
+            seedStackAlgorithms();
+        }
+        if (algorithmRepository.countByCategory("QUEUE") == 0) {
+            seedQueueAlgorithms();
+        }
 
         // 3. Seed Practice Problems
         if (practiceProblemRepository.count() == 0) {
@@ -56,6 +62,12 @@ public class DataInitializer implements CommandLineRunner {
         }
         if (practiceProblemRepository.countByCategory("LINKED_LIST") == 0) {
             seedLinkedListPracticeProblems();
+        }
+        if (practiceProblemRepository.countByCategory("STACK") == 0) {
+            seedStackPracticeProblems();
+        }
+        if (practiceProblemRepository.countByCategory("QUEUE") == 0) {
+            seedQueuePracticeProblems();
         }
     }
 
@@ -1062,5 +1074,645 @@ public class DataInitializer implements CommandLineRunner {
         problem.setExpectedOutput(output);
         problem.setClassName(className);
         practiceProblemRepository.save(problem);
+    }
+
+    // ══════════════════════════════════════════════════════════════════
+    // STACK ALGORITHMS
+    // ══════════════════════════════════════════════════════════════════
+    private void seedStackAlgorithms() {
+        log.info("Seeding Stack algorithms...");
+
+        saveAlgorithm("Stack using Array", "Implement a stack using a fixed-size array with top pointer.", "STACK", "O(1) push/pop", "O(N)", "EASY",
+                "public class StackArray {\n" +
+                "    static int[] arr = new int[5];\n" +
+                "    static int top = -1;\n" +
+                "    static void push(int x) { if (top < arr.length - 1) arr[++top] = x; }\n" +
+                "    static int pop() { if (top >= 0) return arr[top--]; return -1; }\n" +
+                "    static int peek() { return top >= 0 ? arr[top] : -1; }\n" +
+                "    public static void main(String[] args) {\n" +
+                "        push(10);\n" +
+                "        push(20);\n" +
+                "        push(30);\n" +
+                "        System.out.println(\"Peek: \" + peek());\n" +
+                "        System.out.println(\"Pop: \" + pop());\n" +
+                "        System.out.println(\"Pop: \" + pop());\n" +
+                "        System.out.println(\"Peek: \" + peek());\n" +
+                "    }\n" +
+                "}");
+
+        saveAlgorithm("Java Stack", "Use java.util.Stack to push, pop and peek elements.", "STACK", "O(1) amortized", "O(N)", "EASY",
+                "import java.util.Stack;\n" +
+                "public class JavaStack {\n" +
+                "    public static void main(String[] args) {\n" +
+                "        Stack<Integer> stack = new Stack<>();\n" +
+                "        stack.push(10);\n" +
+                "        stack.push(20);\n" +
+                "        stack.push(30);\n" +
+                "        System.out.println(\"Peek: \" + stack.peek());\n" +
+                "        System.out.println(\"Pop: \" + stack.pop());\n" +
+                "        System.out.println(\"Size: \" + stack.size());\n" +
+                "        System.out.println(\"Empty: \" + stack.isEmpty());\n" +
+                "    }\n" +
+                "}");
+
+        saveAlgorithm("Deque as Stack", "Use ArrayDeque as a stack (preferred over java.util.Stack).", "STACK", "O(1)", "O(N)", "EASY",
+                "import java.util.ArrayDeque;\n" +
+                "import java.util.Deque;\n" +
+                "public class DequeStack {\n" +
+                "    public static void main(String[] args) {\n" +
+                "        Deque<Integer> stack = new ArrayDeque<>();\n" +
+                "        stack.push(10);\n" +
+                "        stack.push(20);\n" +
+                "        stack.push(30);\n" +
+                "        System.out.println(\"Peek: \" + stack.peek());\n" +
+                "        System.out.println(\"Pop: \" + stack.pop());\n" +
+                "        System.out.println(\"Size: \" + stack.size());\n" +
+                "    }\n" +
+                "}");
+
+        saveAlgorithm("Balanced Parentheses", "Check if parentheses, brackets, and braces are balanced using a stack.", "STACK", "O(N)", "O(N)", "EASY",
+                "import java.util.Stack;\n" +
+                "public class BalancedParentheses {\n" +
+                "    public static void main(String[] args) {\n" +
+                "        String s = \"({[]})\";\n" +
+                "        Stack<Character> stack = new Stack<>();\n" +
+                "        boolean valid = true;\n" +
+                "        for (int i = 0; i < s.length(); i++) {\n" +
+                "            char c = s.charAt(i);\n" +
+                "            if (c == '(' || c == '{' || c == '[') {\n" +
+                "                stack.push(c);\n" +
+                "            } else {\n" +
+                "                if (stack.isEmpty()) { valid = false; break; }\n" +
+                "                char top = stack.pop();\n" +
+                "                if ((c == ')' && top != '(') ||\n" +
+                "                    (c == '}' && top != '{') ||\n" +
+                "                    (c == ']' && top != '[')) {\n" +
+                "                    valid = false; break;\n" +
+                "                }\n" +
+                "            }\n" +
+                "        }\n" +
+                "        if (!stack.isEmpty()) valid = false;\n" +
+                "        System.out.println(\"Valid: \" + valid);\n" +
+                "    }\n" +
+                "}");
+
+        saveAlgorithm("Next Greater Element", "Find the Next Greater Element for each element using a monotonic stack.", "STACK", "O(N)", "O(N)", "MEDIUM",
+                "import java.util.Stack;\n" +
+                "import java.util.Arrays;\n" +
+                "public class NextGreaterElement {\n" +
+                "    public static void main(String[] args) {\n" +
+                "        int[] arr = {4, 5, 2, 10, 8};\n" +
+                "        int n = arr.length;\n" +
+                "        int[] nge = new int[n];\n" +
+                "        Arrays.fill(nge, -1);\n" +
+                "        Stack<Integer> stack = new Stack<>();\n" +
+                "        for (int i = 0; i < n; i++) {\n" +
+                "            while (!stack.isEmpty() && arr[stack.peek()] < arr[i]) {\n" +
+                "                nge[stack.pop()] = arr[i];\n" +
+                "            }\n" +
+                "            stack.push(i);\n" +
+                "        }\n" +
+                "        System.out.println(Arrays.toString(nge));\n" +
+                "    }\n" +
+                "}");
+
+        saveAlgorithm("Previous Greater Element", "Find the Previous Greater Element for each element using a monotonic stack.", "STACK", "O(N)", "O(N)", "MEDIUM",
+                "import java.util.Stack;\n" +
+                "import java.util.Arrays;\n" +
+                "public class PreviousGreaterElement {\n" +
+                "    public static void main(String[] args) {\n" +
+                "        int[] arr = {4, 5, 2, 10, 8};\n" +
+                "        int n = arr.length;\n" +
+                "        int[] pge = new int[n];\n" +
+                "        Arrays.fill(pge, -1);\n" +
+                "        Stack<Integer> stack = new Stack<>();\n" +
+                "        for (int i = 0; i < n; i++) {\n" +
+                "            while (!stack.isEmpty() && stack.peek() <= arr[i]) {\n" +
+                "                stack.pop();\n" +
+                "            }\n" +
+                "            pge[i] = stack.isEmpty() ? -1 : stack.peek();\n" +
+                "            stack.push(arr[i]);\n" +
+                "        }\n" +
+                "        System.out.println(Arrays.toString(pge));\n" +
+                "    }\n" +
+                "}");
+
+        saveAlgorithm("Next Smaller Element", "Find the Next Smaller Element for each element using a monotonic stack.", "STACK", "O(N)", "O(N)", "MEDIUM",
+                "import java.util.Stack;\n" +
+                "import java.util.Arrays;\n" +
+                "public class NextSmallerElement {\n" +
+                "    public static void main(String[] args) {\n" +
+                "        int[] arr = {4, 5, 2, 10, 8};\n" +
+                "        int n = arr.length;\n" +
+                "        int[] nse = new int[n];\n" +
+                "        Arrays.fill(nse, -1);\n" +
+                "        Stack<Integer> stack = new Stack<>();\n" +
+                "        for (int i = n - 1; i >= 0; i--) {\n" +
+                "            while (!stack.isEmpty() && stack.peek() >= arr[i]) {\n" +
+                "                stack.pop();\n" +
+                "            }\n" +
+                "            nse[i] = stack.isEmpty() ? -1 : stack.peek();\n" +
+                "            stack.push(arr[i]);\n" +
+                "        }\n" +
+                "        System.out.println(Arrays.toString(nse));\n" +
+                "    }\n" +
+                "}");
+
+        saveAlgorithm("Infix to Postfix", "Convert an infix expression to postfix notation using a stack.", "STACK", "O(N)", "O(N)", "MEDIUM",
+                "import java.util.Stack;\n" +
+                "public class InfixToPostfix {\n" +
+                "    static int precedence(char op) {\n" +
+                "        if (op == '+' || op == '-') return 1;\n" +
+                "        if (op == '*' || op == '/') return 2;\n" +
+                "        return 0;\n" +
+                "    }\n" +
+                "    public static void main(String[] args) {\n" +
+                "        String infix = \"a+b*c-d\";\n" +
+                "        Stack<Character> stack = new Stack<>();\n" +
+                "        StringBuilder postfix = new StringBuilder();\n" +
+                "        for (int i = 0; i < infix.length(); i++) {\n" +
+                "            char c = infix.charAt(i);\n" +
+                "            if (Character.isLetterOrDigit(c)) {\n" +
+                "                postfix.append(c);\n" +
+                "            } else if (c == '(') {\n" +
+                "                stack.push(c);\n" +
+                "            } else if (c == ')') {\n" +
+                "                while (!stack.isEmpty() && stack.peek() != '(') {\n" +
+                "                    postfix.append(stack.pop());\n" +
+                "                }\n" +
+                "                stack.pop();\n" +
+                "            } else {\n" +
+                "                while (!stack.isEmpty() && precedence(stack.peek()) >= precedence(c)) {\n" +
+                "                    postfix.append(stack.pop());\n" +
+                "                }\n" +
+                "                stack.push(c);\n" +
+                "            }\n" +
+                "        }\n" +
+                "        while (!stack.isEmpty()) postfix.append(stack.pop());\n" +
+                "        System.out.println(postfix);\n" +
+                "    }\n" +
+                "}");
+
+        saveAlgorithm("Postfix Evaluation", "Evaluate a postfix expression using a stack.", "STACK", "O(N)", "O(N)", "MEDIUM",
+                "import java.util.Stack;\n" +
+                "public class PostfixEval {\n" +
+                "    public static void main(String[] args) {\n" +
+                "        String expr = \"231*+9-\";\n" +
+                "        Stack<Integer> stack = new Stack<>();\n" +
+                "        for (int i = 0; i < expr.length(); i++) {\n" +
+                "            char c = expr.charAt(i);\n" +
+                "            if (Character.isDigit(c)) {\n" +
+                "                stack.push(c - '0');\n" +
+                "            } else {\n" +
+                "                int b = stack.pop();\n" +
+                "                int a = stack.pop();\n" +
+                "                if (c == '+') stack.push(a + b);\n" +
+                "                else if (c == '-') stack.push(a - b);\n" +
+                "                else if (c == '*') stack.push(a * b);\n" +
+                "                else stack.push(a / b);\n" +
+                "            }\n" +
+                "        }\n" +
+                "        System.out.println(\"Result: \" + stack.pop());\n" +
+                "    }\n" +
+                "}");
+
+        saveAlgorithm("Min Stack", "Design a stack that supports O(1) getMin() using an auxiliary stack.", "STACK", "O(1) all ops", "O(N)", "MEDIUM",
+                "import java.util.Stack;\n" +
+                "public class MinStack {\n" +
+                "    Stack<Integer> stack = new Stack<>();\n" +
+                "    Stack<Integer> minSt = new Stack<>();\n" +
+                "    void push(int x) {\n" +
+                "        stack.push(x);\n" +
+                "        if (minSt.isEmpty() || x <= minSt.peek()) minSt.push(x);\n" +
+                "    }\n" +
+                "    int pop() {\n" +
+                "        int val = stack.pop();\n" +
+                "        if (val == minSt.peek()) minSt.pop();\n" +
+                "        return val;\n" +
+                "    }\n" +
+                "    int getMin() { return minSt.peek(); }\n" +
+                "    public static void main(String[] args) {\n" +
+                "        MinStack ms = new MinStack();\n" +
+                "        ms.push(5);\n" +
+                "        ms.push(3);\n" +
+                "        ms.push(7);\n" +
+                "        ms.push(1);\n" +
+                "        System.out.println(\"Min: \" + ms.getMin());\n" +
+                "        ms.pop();\n" +
+                "        System.out.println(\"Min: \" + ms.getMin());\n" +
+                "    }\n" +
+                "}");
+
+        saveAlgorithm("Reverse Stack", "Reverse a stack using only push/pop operations (no extra array).", "STACK", "O(N²)", "O(N)", "MEDIUM",
+                "import java.util.Stack;\n" +
+                "public class StackReverse {\n" +
+                "    static void insertAtBottom(Stack<Integer> st, int x) {\n" +
+                "        if (st.isEmpty()) { st.push(x); return; }\n" +
+                "        int top = st.pop();\n" +
+                "        insertAtBottom(st, x);\n" +
+                "        st.push(top);\n" +
+                "    }\n" +
+                "    static void reverse(Stack<Integer> st) {\n" +
+                "        if (st.isEmpty()) return;\n" +
+                "        int top = st.pop();\n" +
+                "        reverse(st);\n" +
+                "        insertAtBottom(st, top);\n" +
+                "    }\n" +
+                "    public static void main(String[] args) {\n" +
+                "        Stack<Integer> st = new Stack<>();\n" +
+                "        st.push(1); st.push(2); st.push(3);\n" +
+                "        reverse(st);\n" +
+                "        System.out.println(st);\n" +
+                "    }\n" +
+                "}");
+
+        log.info("Stack algorithms seeded.");
+    }
+
+    // ══════════════════════════════════════════════════════════════════
+    // QUEUE ALGORITHMS
+    // ══════════════════════════════════════════════════════════════════
+    private void seedQueueAlgorithms() {
+        log.info("Seeding Queue algorithms...");
+
+        saveAlgorithm("Queue using Array", "Implement a FIFO queue using a fixed-size array with front and rear pointers.", "QUEUE", "O(1) enqueue/dequeue", "O(N)", "EASY",
+                "public class QueueArray {\n" +
+                "    static int[] arr = new int[5];\n" +
+                "    static int front = 0, rear = -1, size = 0;\n" +
+                "    static void enqueue(int x) { if (size < arr.length) { arr[++rear] = x; size++; } }\n" +
+                "    static int dequeue() { if (size > 0) { size--; return arr[front++]; } return -1; }\n" +
+                "    static int peek() { return size > 0 ? arr[front] : -1; }\n" +
+                "    public static void main(String[] args) {\n" +
+                "        enqueue(10);\n" +
+                "        enqueue(20);\n" +
+                "        enqueue(30);\n" +
+                "        System.out.println(\"Peek: \" + peek());\n" +
+                "        System.out.println(\"Dequeue: \" + dequeue());\n" +
+                "        System.out.println(\"Dequeue: \" + dequeue());\n" +
+                "        System.out.println(\"Peek: \" + peek());\n" +
+                "    }\n" +
+                "}");
+
+        saveAlgorithm("Java Queue (LinkedList)", "Use java.util.LinkedList as a Queue.", "QUEUE", "O(1)", "O(N)", "EASY",
+                "import java.util.Queue;\n" +
+                "import java.util.LinkedList;\n" +
+                "public class JavaQueue {\n" +
+                "    public static void main(String[] args) {\n" +
+                "        Queue<Integer> queue = new LinkedList<>();\n" +
+                "        queue.offer(10);\n" +
+                "        queue.offer(20);\n" +
+                "        queue.offer(30);\n" +
+                "        System.out.println(\"Peek: \" + queue.peek());\n" +
+                "        System.out.println(\"Poll: \" + queue.poll());\n" +
+                "        System.out.println(\"Size: \" + queue.size());\n" +
+                "        System.out.println(\"Empty: \" + queue.isEmpty());\n" +
+                "    }\n" +
+                "}");
+
+        saveAlgorithm("Circular Queue", "Implement a Circular Queue using array with wrap-around using modulus.", "QUEUE", "O(1)", "O(N)", "MEDIUM",
+                "public class CircularQueue {\n" +
+                "    int[] arr;\n" +
+                "    int front = 0, rear = 0, size = 0;\n" +
+                "    CircularQueue(int capacity) { arr = new int[capacity]; }\n" +
+                "    void enqueue(int x) {\n" +
+                "        if (size == arr.length) { System.out.println(\"Queue full\"); return; }\n" +
+                "        arr[rear] = x;\n" +
+                "        rear = (rear + 1) % arr.length;\n" +
+                "        size++;\n" +
+                "    }\n" +
+                "    int dequeue() {\n" +
+                "        if (size == 0) return -1;\n" +
+                "        int val = arr[front];\n" +
+                "        front = (front + 1) % arr.length;\n" +
+                "        size--;\n" +
+                "        return val;\n" +
+                "    }\n" +
+                "    public static void main(String[] args) {\n" +
+                "        CircularQueue cq = new CircularQueue(4);\n" +
+                "        cq.enqueue(10); cq.enqueue(20); cq.enqueue(30);\n" +
+                "        System.out.println(cq.dequeue());\n" +
+                "        cq.enqueue(40); cq.enqueue(50);\n" +
+                "        System.out.println(cq.dequeue());\n" +
+                "        System.out.println(cq.size);\n" +
+                "    }\n" +
+                "}");
+
+        saveAlgorithm("Priority Queue", "Use java.util.PriorityQueue (min-heap) to process elements in priority order.", "QUEUE", "O(log N) offer/poll", "O(N)", "MEDIUM",
+                "import java.util.PriorityQueue;\n" +
+                "public class PriorityQueueDemo {\n" +
+                "    public static void main(String[] args) {\n" +
+                "        PriorityQueue<Integer> pq = new PriorityQueue<>();\n" +
+                "        pq.offer(40);\n" +
+                "        pq.offer(10);\n" +
+                "        pq.offer(30);\n" +
+                "        pq.offer(20);\n" +
+                "        System.out.println(\"Min: \" + pq.peek());\n" +
+                "        while (!pq.isEmpty()) {\n" +
+                "            System.out.print(pq.poll() + \" \");\n" +
+                "        }\n" +
+                "        System.out.println();\n" +
+                "    }\n" +
+                "}");
+
+        saveAlgorithm("Generate Binary Numbers", "Generate first N binary numbers using a queue.", "QUEUE", "O(N)", "O(N)", "EASY",
+                "import java.util.Queue;\n" +
+                "import java.util.LinkedList;\n" +
+                "public class GenerateBinaryNumbers {\n" +
+                "    public static void main(String[] args) {\n" +
+                "        int n = 5;\n" +
+                "        Queue<String> queue = new LinkedList<>();\n" +
+                "        queue.offer(\"1\");\n" +
+                "        for (int i = 0; i < n; i++) {\n" +
+                "            String front = queue.poll();\n" +
+                "            System.out.print(front + \" \");\n" +
+                "            queue.offer(front + \"0\");\n" +
+                "            queue.offer(front + \"1\");\n" +
+                "        }\n" +
+                "        System.out.println();\n" +
+                "    }\n" +
+                "}");
+
+        saveAlgorithm("Sliding Window Maximum (Deque)", "Find maximum in each window of size K using a monotonic deque.", "QUEUE", "O(N)", "O(K)", "HARD",
+                "import java.util.ArrayDeque;\n" +
+                "import java.util.Deque;\n" +
+                "public class SlidingWindowMaxDeque {\n" +
+                "    public static void main(String[] args) {\n" +
+                "        int[] arr = {1, 3, -1, -3, 5, 3, 6, 7};\n" +
+                "        int k = 3;\n" +
+                "        int n = arr.length;\n" +
+                "        Deque<Integer> deque = new ArrayDeque<>();\n" +
+                "        for (int i = 0; i < n; i++) {\n" +
+                "            while (!deque.isEmpty() && deque.peekFirst() < i - k + 1) deque.pollFirst();\n" +
+                "            while (!deque.isEmpty() && arr[deque.peekLast()] < arr[i]) deque.pollLast();\n" +
+                "            deque.offerLast(i);\n" +
+                "            if (i >= k - 1) System.out.print(arr[deque.peekFirst()] + \" \");\n" +
+                "        }\n" +
+                "        System.out.println();\n" +
+                "    }\n" +
+                "}");
+
+        saveAlgorithm("BFS Queue Processing", "Breadth-First Search using a Queue to traverse a graph level by level.", "QUEUE", "O(V+E)", "O(V)", "MEDIUM",
+                "import java.util.*;\n" +
+                "public class BfsQueue {\n" +
+                "    public static void main(String[] args) {\n" +
+                "        int vertices = 6;\n" +
+                "        List<List<Integer>> adj = new ArrayList<>();\n" +
+                "        for (int i = 0; i < vertices; i++) adj.add(new ArrayList<>());\n" +
+                "        adj.get(0).add(1); adj.get(0).add(2);\n" +
+                "        adj.get(1).add(3); adj.get(1).add(4);\n" +
+                "        adj.get(2).add(5);\n" +
+                "        boolean[] visited = new boolean[vertices];\n" +
+                "        Queue<Integer> queue = new LinkedList<>();\n" +
+                "        queue.offer(0);\n" +
+                "        visited[0] = true;\n" +
+                "        while (!queue.isEmpty()) {\n" +
+                "            int node = queue.poll();\n" +
+                "            System.out.print(node + \" \");\n" +
+                "            for (int neighbor : adj.get(node)) {\n" +
+                "                if (!visited[neighbor]) {\n" +
+                "                    visited[neighbor] = true;\n" +
+                "                    queue.offer(neighbor);\n" +
+                "                }\n" +
+                "            }\n" +
+                "        }\n" +
+                "        System.out.println();\n" +
+                "    }\n" +
+                "}");
+
+        log.info("Queue algorithms seeded.");
+    }
+
+    // ══════════════════════════════════════════════════════════════════
+    // STACK PRACTICE PROBLEMS
+    // ══════════════════════════════════════════════════════════════════
+    private void seedStackPracticeProblems() {
+        log.info("Seeding Stack practice problems...");
+
+        saveProblem("Push and Pop",
+                "Create a stack, push elements 10, 20, 30 into it, then pop and print all elements until empty (each on a new line).",
+                "EASY", "STACK",
+                "import java.util.Stack;\n" +
+                "public class PracticeStackPush {\n" +
+                "    public static void main(String[] args) {\n" +
+                "        Stack<Integer> stack = new Stack<>();\n" +
+                "        // TODO: Push 10, 20, 30. Then pop until empty and print each.\n\n" +
+                "    }\n" +
+                "}",
+                "import java.util.Stack;\n" +
+                "public class PracticeStackPush {\n" +
+                "    public static void main(String[] args) {\n" +
+                "        Stack<Integer> stack = new Stack<>();\n" +
+                "        stack.push(10);\n" +
+                "        stack.push(20);\n" +
+                "        stack.push(30);\n" +
+                "        while (!stack.isEmpty()) {\n" +
+                "            System.out.println(stack.pop());\n" +
+                "        }\n" +
+                "    }\n" +
+                "}",
+                "30\n20\n10",
+                "PracticeStackPush");
+
+        saveProblem("Valid Parentheses",
+                "Check if the string \"({[]}\" has balanced parentheses. Print true or false.",
+                "EASY", "STACK",
+                "import java.util.Stack;\n" +
+                "public class PracticeBalancedParen {\n" +
+                "    public static void main(String[] args) {\n" +
+                "        String s = \"({[]})\";\n" +
+                "        boolean valid = false;\n" +
+                "        // TODO: Check balanced parentheses\n\n" +
+                "        System.out.println(valid);\n" +
+                "    }\n" +
+                "}",
+                "import java.util.Stack;\n" +
+                "public class PracticeBalancedParen {\n" +
+                "    public static void main(String[] args) {\n" +
+                "        String s = \"({[]})\";\n" +
+                "        Stack<Character> stack = new Stack<>();\n" +
+                "        boolean valid = true;\n" +
+                "        for (char c : s.toCharArray()) {\n" +
+                "            if (c == '(' || c == '{' || c == '[') { stack.push(c); }\n" +
+                "            else {\n" +
+                "                if (stack.isEmpty()) { valid = false; break; }\n" +
+                "                char t = stack.pop();\n" +
+                "                if ((c == ')' && t != '(') || (c == '}' && t != '{') || (c == ']' && t != '[')) { valid = false; break; }\n" +
+                "            }\n" +
+                "        }\n" +
+                "        System.out.println(valid && stack.isEmpty());\n" +
+                "    }\n" +
+                "}",
+                "true",
+                "PracticeBalancedParen");
+
+        saveProblem("Next Greater Element",
+                "Find NGE for arr = {4, 5, 2, 10, 8}. Print the result array in format [n1, n2, ...].",
+                "MEDIUM", "STACK",
+                "import java.util.Stack;\n" +
+                "import java.util.Arrays;\n" +
+                "public class PracticeNge {\n" +
+                "    public static void main(String[] args) {\n" +
+                "        int[] arr = {4, 5, 2, 10, 8};\n" +
+                "        int[] nge = new int[arr.length];\n" +
+                "        Arrays.fill(nge, -1);\n" +
+                "        // TODO: Fill nge using a stack\n\n" +
+                "        System.out.println(Arrays.toString(nge));\n" +
+                "    }\n" +
+                "}",
+                "import java.util.Stack;\n" +
+                "import java.util.Arrays;\n" +
+                "public class PracticeNge {\n" +
+                "    public static void main(String[] args) {\n" +
+                "        int[] arr = {4, 5, 2, 10, 8};\n" +
+                "        int n = arr.length;\n" +
+                "        int[] nge = new int[n];\n" +
+                "        Arrays.fill(nge, -1);\n" +
+                "        Stack<Integer> stack = new Stack<>();\n" +
+                "        for (int i = 0; i < n; i++) {\n" +
+                "            while (!stack.isEmpty() && arr[stack.peek()] < arr[i]) nge[stack.pop()] = arr[i];\n" +
+                "            stack.push(i);\n" +
+                "        }\n" +
+                "        System.out.println(Arrays.toString(nge));\n" +
+                "    }\n" +
+                "}",
+                "[5, 10, 10, -1, -1]",
+                "PracticeNge");
+
+        saveProblem("Min Stack",
+                "Design a MinStack. Push 5, 3, 7, 1. Print getMin(), pop, print getMin().",
+                "MEDIUM", "STACK",
+                "import java.util.Stack;\n" +
+                "public class PracticeMinStack {\n" +
+                "    // TODO: Implement MinStack\n" +
+                "    public static void main(String[] args) {\n" +
+                "        // Push 5, 3, 7, 1 and print getMin() before and after popping 1\n" +
+                "    }\n" +
+                "}",
+                "import java.util.Stack;\n" +
+                "public class PracticeMinStack {\n" +
+                "    Stack<Integer> stack = new Stack<>();\n" +
+                "    Stack<Integer> minSt = new Stack<>();\n" +
+                "    void push(int x) {\n" +
+                "        stack.push(x);\n" +
+                "        if (minSt.isEmpty() || x <= minSt.peek()) minSt.push(x);\n" +
+                "    }\n" +
+                "    int pop() { int v = stack.pop(); if (v == minSt.peek()) minSt.pop(); return v; }\n" +
+                "    int getMin() { return minSt.peek(); }\n" +
+                "    public static void main(String[] args) {\n" +
+                "        PracticeMinStack ms = new PracticeMinStack();\n" +
+                "        ms.push(5); ms.push(3); ms.push(7); ms.push(1);\n" +
+                "        System.out.println(ms.getMin());\n" +
+                "        ms.pop();\n" +
+                "        System.out.println(ms.getMin());\n" +
+                "    }\n" +
+                "}",
+                "1\n3",
+                "PracticeMinStack");
+
+        log.info("Stack practice problems seeded.");
+    }
+
+    // ══════════════════════════════════════════════════════════════════
+    // QUEUE PRACTICE PROBLEMS
+    // ══════════════════════════════════════════════════════════════════
+    private void seedQueuePracticeProblems() {
+        log.info("Seeding Queue practice problems...");
+
+        saveProblem("Enqueue and Dequeue",
+                "Use a Queue, enqueue 10, 20, 30. Dequeue and print all elements until empty (each on new line).",
+                "EASY", "QUEUE",
+                "import java.util.*;\n" +
+                "public class PracticeQueueBasic {\n" +
+                "    public static void main(String[] args) {\n" +
+                "        Queue<Integer> queue = new LinkedList<>();\n" +
+                "        // TODO: Enqueue 10, 20, 30. Dequeue all and print.\n\n" +
+                "    }\n" +
+                "}",
+                "import java.util.*;\n" +
+                "public class PracticeQueueBasic {\n" +
+                "    public static void main(String[] args) {\n" +
+                "        Queue<Integer> queue = new LinkedList<>();\n" +
+                "        queue.offer(10); queue.offer(20); queue.offer(30);\n" +
+                "        while (!queue.isEmpty()) System.out.println(queue.poll());\n" +
+                "    }\n" +
+                "}",
+                "10\n20\n30",
+                "PracticeQueueBasic");
+
+        saveProblem("Generate Binary Numbers",
+                "Generate the first 5 binary numbers using a Queue. Print each on a new line.",
+                "EASY", "QUEUE",
+                "import java.util.*;\n" +
+                "public class PracticeBinaryNums {\n" +
+                "    public static void main(String[] args) {\n" +
+                "        int n = 5;\n" +
+                "        Queue<String> queue = new LinkedList<>();\n" +
+                "        // TODO: Generate first n binary numbers\n\n" +
+                "    }\n" +
+                "}",
+                "import java.util.*;\n" +
+                "public class PracticeBinaryNums {\n" +
+                "    public static void main(String[] args) {\n" +
+                "        int n = 5;\n" +
+                "        Queue<String> queue = new LinkedList<>();\n" +
+                "        queue.offer(\"1\");\n" +
+                "        for (int i = 0; i < n; i++) {\n" +
+                "            String front = queue.poll();\n" +
+                "            System.out.println(front);\n" +
+                "            queue.offer(front + \"0\");\n" +
+                "            queue.offer(front + \"1\");\n" +
+                "        }\n" +
+                "    }\n" +
+                "}",
+                "1\n10\n11\n100\n101",
+                "PracticeBinaryNums");
+
+        saveProblem("Circular Queue",
+                "Implement a CircularQueue with capacity 4. Enqueue 10, 20, 30. Dequeue once. Enqueue 40. Print size.",
+                "MEDIUM", "QUEUE",
+                "public class PracticeCircularQueue {\n" +
+                "    // TODO: Implement CircularQueue\n" +
+                "    public static void main(String[] args) {\n" +
+                "        // enqueue 10,20,30; dequeue; enqueue 40; print size\n" +
+                "    }\n" +
+                "}",
+                "public class PracticeCircularQueue {\n" +
+                "    int[] arr; int front = 0, rear = 0, size = 0;\n" +
+                "    PracticeCircularQueue(int cap) { arr = new int[cap]; }\n" +
+                "    void enqueue(int x) { if (size == arr.length) return; arr[rear] = x; rear = (rear+1)%arr.length; size++; }\n" +
+                "    int dequeue() { if (size == 0) return -1; int v = arr[front]; front = (front+1)%arr.length; size--; return v; }\n" +
+                "    public static void main(String[] args) {\n" +
+                "        PracticeCircularQueue cq = new PracticeCircularQueue(4);\n" +
+                "        cq.enqueue(10); cq.enqueue(20); cq.enqueue(30);\n" +
+                "        cq.dequeue();\n" +
+                "        cq.enqueue(40);\n" +
+                "        System.out.println(cq.size);\n" +
+                "    }\n" +
+                "}",
+                "3",
+                "PracticeCircularQueue");
+
+        saveProblem("Priority Queue Min Extraction",
+                "Use PriorityQueue to extract minimum from {40, 10, 30, 20}. Print extracted values in order.",
+                "MEDIUM", "QUEUE",
+                "import java.util.PriorityQueue;\n" +
+                "public class PracticePriorityQ {\n" +
+                "    public static void main(String[] args) {\n" +
+                "        PriorityQueue<Integer> pq = new PriorityQueue<>();\n" +
+                "        // TODO: Add 40, 10, 30, 20. Poll and print until empty.\n\n" +
+                "    }\n" +
+                "}",
+                "import java.util.PriorityQueue;\n" +
+                "public class PracticePriorityQ {\n" +
+                "    public static void main(String[] args) {\n" +
+                "        PriorityQueue<Integer> pq = new PriorityQueue<>();\n" +
+                "        pq.offer(40); pq.offer(10); pq.offer(30); pq.offer(20);\n" +
+                "        while (!pq.isEmpty()) System.out.println(pq.poll());\n" +
+                "    }\n" +
+                "}",
+                "10\n20\n30\n40",
+                "PracticePriorityQ");
+
+        log.info("Queue practice problems seeded.");
     }
 }
