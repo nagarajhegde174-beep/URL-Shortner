@@ -21,6 +21,8 @@ public class StepMetadata {
      *  Arrays:      READ, WRITE, COMPARE, SWAP, POINTER_MOVE, INSERT, DELETE, WINDOW_UPDATE
      *  Strings:     READ, COMPARE, MATCH, MISMATCH, POINTER_MOVE, WINDOW_UPDATE, PATTERN_SHIFT, HASH_COMPUTE
      *  LinkedLists: TRAVERSE, NODE_CREATE, NODE_DELETE, POINTER_UPDATE, INSERT, REMOVE, REVERSE, COMPARE
+     *  Stacks:      PUSH, POP, PEEK, STACK_UPDATE, COMPARE, REMOVE, INSERT, POINTER_UPDATE
+     *  Queues:      ENQUEUE, DEQUEUE, PEEK, FRONT_MOVE, REAR_MOVE, QUEUE_UPDATE, COMPARE, REMOVE, INSERT
      */
     private String operation;
 
@@ -66,4 +68,50 @@ public class StepMetadata {
     /** Snapshot of all current nodes in the list (for full re-render on each step).
      *  Each entry: {"nodeId": "n1", "data": "10", "nextNodeId": "n2", "prevNodeId": null} */
     private List<Map<String, String>> nodeSnapshot;
+
+    // ─── Stack-specific Fields ────────────────────────────────────────────────
+    /**
+     * Ordered snapshot of the DSA stack contents, index 0 = TOP, last = BOTTOM.
+     * Populated by extractStackMetadata() using this priority:
+     *   1. Explicit JDI runtime state (inspect java.util.Stack / Deque backing array via JDI)
+     *   2. Variable type inspection (find variables whose declared type includes "Stack"/"Deque")
+     *   3. Class-name heuristic (final fallback)
+     *
+     * NOTE: This is the USER's DSA stack — completely separate from the JVM call stack
+     * which is captured in StepDebugInfo.callStack.
+     */
+    private List<String> stackSnapshot;
+
+    /** Current top-of-stack index (0-based, -1 = empty). */
+    private Integer topIndex;
+
+    /** Name of the stack variable in scope (e.g. "stack", "st", "myStack"). */
+    private String stackVariableName;
+
+    // ─── Queue-specific Fields ────────────────────────────────────────────────
+    /**
+     * Ordered snapshot of the DSA queue contents, index 0 = FRONT, last = REAR.
+     * Populated by extractQueueMetadata() using the same priority as stackSnapshot:
+     *   1. JDI runtime state inspection
+     *   2. Variable type inspection
+     *   3. Class-name heuristic fallback
+     */
+    private List<String> queueSnapshot;
+
+    /** Current front pointer index in the backing array (for array-based circular queues). */
+    private Integer frontIndex;
+
+    /** Current rear pointer index in the backing array (for array-based circular queues). */
+    private Integer rearIndex;
+
+    /** Name of the queue variable in scope (e.g. "queue", "q"). */
+    private String queueVariableName;
+
+    /**
+     * True when the queue variable is a java.util.PriorityQueue.
+     * The QueueVisualizer uses this flag to apply priority-order rendering.
+     * This flag also enables future integration with a HeapVisualizer
+     * when the Heap/PriorityQueue module is added in a later phase.
+     */
+    private Boolean isPriorityQueue;
 }

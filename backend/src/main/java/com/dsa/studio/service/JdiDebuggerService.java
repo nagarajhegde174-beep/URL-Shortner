@@ -292,10 +292,62 @@ public class JdiDebuggerService {
     }
 
     private StepMetadata extractMetadata(String className, String codeLine, List<VariableInfo> variables, StackFrame topFrame) {
-        // ── 1. Determine data structure from class name (explicit, not inferred) ──
         String lowerClassName = className.toLowerCase();
+
+        // ══════════════════════════════════════════════════════════════════════
+        // PRIORITY 1 & 2: JDI variable/type inspection — inspect declared types
+        // of local variables BEFORE falling back to class-name heuristics.
+        // This is the most reliable detection because the user's code may name
+        // their class anything, but the type of their Stack/Queue variable is
+        // always explicit (java.util.Stack, java.util.Deque, java.util.Queue…).
+        // ══════════════════════════════════════════════════════════════════════
+        boolean hasStackVar = false;
+        boolean hasQueueVar = false;
+        boolean hasPriorityQueueVar = false;
+        if (topFrame != null) {
+            try {
+                for (LocalVariable var : topFrame.visibleVariables()) {
+                    String typeName = var.typeName().toLowerCase();
+                    if (typeName.contains("stack") || typeName.contains("deque")
+                            || typeName.contains("arraydeque")) {
+                        hasStackVar = true;
+                    }
+                    if (typeName.contains("queue") || typeName.contains("linkedlist")
+                            || typeName.contains("priorityqueue") || typeName.contains("circularqueue")) {
+                        hasQueueVar = true;
+                    }
+                    if (typeName.contains("priorityqueue")) {
+                        hasPriorityQueueVar = true;
+                    }
+                }
+            } catch (Exception ignored) {}
+        }
+        // Also check variables list (fallback when topFrame is unavailable)
+        if (!hasStackVar && !hasQueueVar) {
+            for (VariableInfo v : variables) {
+                String type = v.getType() != null ? v.getType().toLowerCase() : "";
+                if (type.contains("stack") || type.contains("deque") || type.contains("arraydeque")) {
+                    hasStackVar = true;
+                }
+                if (type.contains("queue") || type.contains("priorityqueue") || type.contains("circularqueue")) {
+                    hasQueueVar = true;
+                }
+                if (type.contains("priorityqueue")) {
+                    hasPriorityQueueVar = true;
+                }
+            }
+        }
+
+        // ══════════════════════════════════════════════════════════════════════
+        // PRIORITY 3: Class-name heuristic (FINAL fallback only)
+        // Applied only when variable inspection did not already identify the DS.
+        // ══════════════════════════════════════════════════════════════════════
         String dataStructure;
-        if (lowerClassName.contains("linkedlist") || lowerClassName.contains("node")
+        if (hasStackVar && !hasQueueVar) {
+            dataStructure = "STACK";
+        } else if (hasQueueVar) {
+            dataStructure = "QUEUE";
+        } else if (lowerClassName.contains("linkedlist") || lowerClassName.contains("node")
                 || lowerClassName.contains("singlylist") || lowerClassName.contains("doublylist")
                 || lowerClassName.contains("circularlist") || lowerClassName.contains("listnode")) {
             dataStructure = "LINKED_LIST";
@@ -303,9 +355,18 @@ public class JdiDebuggerService {
                 || lowerClassName.contains("anagram") || lowerClassName.contains("kmp")
                 || lowerClassName.contains("rabin") || lowerClassName.contains("naive")
                 || lowerClassName.contains("lps") || lowerClassName.contains("pattern")
-                || lowerClassName.contains("substring") || lowerClassName.contains("reverse")
-                || lowerClassName.contains("charfreq") || lowerClassName.contains("rotation")) {
+                || lowerClassName.contains("substring") || lowerClassName.contains("charfreq")
+                || lowerClassName.contains("rotation")) {
             dataStructure = "STRING";
+        } else if (lowerClassName.contains("stack") || lowerClassName.contains("balancedparen")
+                || lowerClassName.contains("nge") || lowerClassName.contains("nse")
+                || lowerClassName.contains("pge") || lowerClassName.contains("infixtopostfix")
+                || lowerClassName.contains("postfixeval") || lowerClassName.contains("minstack")) {
+            dataStructure = "STACK";
+        } else if (lowerClassName.contains("queue") || lowerClassName.contains("circularqueue")
+                || lowerClassName.contains("priorityqueue") || lowerClassName.contains("bfs")
+                || lowerClassName.contains("binarynum") || lowerClassName.contains("nonrepeating")) {
+            dataStructure = "QUEUE";
         } else {
             dataStructure = "ARRAY";
         }
@@ -360,6 +421,20 @@ public class JdiDebuggerService {
         // ══════════════════════════════════════════════════════════════════════════
         if ("STRING".equals(dataStructure)) {
             return extractStringMetadata(trimmedLine, variables, pointers, indices, className);
+        }
+
+        // ══════════════════════════════════════════════════════════════════════════
+        // STACK METADATA
+        // ══════════════════════════════════════════════════════════════════════════
+        if ("STACK".equals(dataStructure)) {
+            return extractStackMetadata(trimmedLine, variables, pointers, indices, topFrame);
+        }
+
+        // ══════════════════════════════════════════════════════════════════════════
+        // QUEUE METADATA
+        // ══════════════════════════════════════════════════════════════════════════
+        if ("QUEUE".equals(dataStructure)) {
+            return extractQueueMetadata(trimmedLine, variables, pointers, indices, topFrame, hasPriorityQueueVar);
         }
 
         // ══════════════════════════════════════════════════════════════════════════
@@ -677,6 +752,255 @@ public class JdiDebuggerService {
                 .patternOffset(patternOffset)
                 .rollingHash(rollingHash)
                 .build();
+    }
+
+    // ══════════════════════════════════════════════════════════════════════════
+    // STACK METADATA EXTRACTION
+    // Priority: JDI runtime state → variable type inspection → code-line pattern
+    // NOTE: This is the DSA LIFO stack — completely separate from the JVM call
+    // stack which is captured in StepDebugInfo.callStack via thread.frames().
+    // ══════════════════════════════════════════════════════════════════════════
+    private StepMetadata extractStackMetadata(String trimmedLine, List<VariableInfo> variables,
+                                              Map<String, Integer> pointers, List<Integer> indices,
+                                              StackFrame topFrame) {
+        List<String> stackSnapshot = new ArrayList<>();
+        String stackVariableName = null;
+        Integer topIndex = -1;
+
+        // ── PRIORITY 1: JDI runtime state — inspect actual heap object ───────────
+        if (topFrame != null) {
+            try {
+                for (LocalVariable var : topFrame.visibleVariables()) {
+                    String typeName = var.typeName().toLowerCase();
+                    if (typeName.contains("stack") || typeName.contains("deque") || typeName.contains("arraydeque")) {
+                        Value val = topFrame.getValue(var);
+                        if (val instanceof ObjectReference objRef) {
+                            stackVariableName = var.name();
+                            // Try to read the backing array from java.util.Stack/Vector/ArrayDeque via JDI
+                            List<String> elements = extractCollectionElements(objRef);
+                            if (!elements.isEmpty()) {
+                                // Stack snapshot: index 0 = TOP
+                                Collections.reverse(elements);
+                                stackSnapshot = elements;
+                                topIndex = stackSnapshot.isEmpty() ? -1 : 0;
+                            }
+                        }
+                        break;
+                    }
+                }
+            } catch (Exception e) {
+                log.debug("JDI stack extraction: {}", e.getMessage());
+            }
+        }
+
+        // ── PRIORITY 2: Variable list type inspection (fallback if JDI above missed) ──
+        if (stackSnapshot.isEmpty()) {
+            for (VariableInfo v : variables) {
+                String type = v.getType() != null ? v.getType().toLowerCase() : "";
+                if ((type.contains("stack") || type.contains("deque"))
+                        && v.getValue() != null && v.getValue().startsWith("[")) {
+                    stackVariableName = v.getName();
+                    try {
+                        String raw = v.getValue().replaceAll("^\\[|\\]$", "").trim();
+                        if (!raw.isEmpty()) {
+                            String[] parts = raw.split(",\\s*");
+                            List<String> elems = new ArrayList<>(Arrays.asList(parts));
+                            Collections.reverse(elems);
+                            stackSnapshot = elems;
+                            topIndex = stackSnapshot.isEmpty() ? -1 : 0;
+                        }
+                    } catch (Exception ignored) {}
+                    break;
+                }
+            }
+        }
+
+        // ── Operation detection from current code line ───────────────────────────
+        String operation = "STACK_UPDATE";
+        if (trimmedLine.contains(".push(") || trimmedLine.contains(".push (")) {
+            operation = "PUSH";
+        } else if (trimmedLine.contains(".pop(") || trimmedLine.contains(".pop (")) {
+            operation = "POP";
+        } else if (trimmedLine.contains(".peek(") || trimmedLine.contains(".top(")) {
+            operation = "PEEK";
+        } else if (trimmedLine.contains(".isEmpty(")) {
+            operation = "STACK_UPDATE";
+        } else if (trimmedLine.contains(".search(")) {
+            operation = "COMPARE";
+        } else if (trimmedLine.contains("==") || trimmedLine.contains("!=")
+                || trimmedLine.contains("<") || trimmedLine.contains(">")) {
+            operation = "COMPARE";
+        } else if (trimmedLine.contains("arr[") && trimmedLine.contains("=") && !trimmedLine.contains("==")) {
+            // Array-backed stack write
+            operation = "PUSH";
+        } else if (trimmedLine.contains("top--") || trimmedLine.contains("top -=")) {
+            operation = "POP";
+        } else if (trimmedLine.contains("top++") || trimmedLine.contains("top +=")) {
+            operation = "PUSH";
+        }
+
+        return StepMetadata.builder()
+                .dataStructure("STACK")
+                .operation(operation)
+                .indices(indices)
+                .pointers(pointers)
+                .stackSnapshot(stackSnapshot)
+                .topIndex(topIndex)
+                .stackVariableName(stackVariableName)
+                .build();
+    }
+
+    // ══════════════════════════════════════════════════════════════════════════
+    // QUEUE METADATA EXTRACTION
+    // Priority: JDI runtime state → variable type inspection → code-line pattern
+    // PriorityQueue sets isPriorityQueue=true for future HeapVisualizer support.
+    // ══════════════════════════════════════════════════════════════════════════
+    private StepMetadata extractQueueMetadata(String trimmedLine, List<VariableInfo> variables,
+                                              Map<String, Integer> pointers, List<Integer> indices,
+                                              StackFrame topFrame, boolean isPriorityQueue) {
+        List<String> queueSnapshot = new ArrayList<>();
+        String queueVariableName = null;
+        Integer frontIndex = 0;
+        Integer rearIndex = -1;
+
+        // ── PRIORITY 1: JDI runtime state ────────────────────────────────────────
+        if (topFrame != null) {
+            try {
+                for (LocalVariable var : topFrame.visibleVariables()) {
+                    String typeName = var.typeName().toLowerCase();
+                    if (typeName.contains("queue") || typeName.contains("deque")
+                            || typeName.contains("priorityqueue")) {
+                        Value val = topFrame.getValue(var);
+                        if (val instanceof ObjectReference objRef) {
+                            queueVariableName = var.name();
+                            List<String> elements = extractCollectionElements(objRef);
+                            if (!elements.isEmpty()) {
+                                // Queue snapshot: index 0 = FRONT, last = REAR
+                                queueSnapshot = elements;
+                                frontIndex = 0;
+                                rearIndex = elements.size() - 1;
+                            }
+                        }
+                        break;
+                    }
+                }
+            } catch (Exception e) {
+                log.debug("JDI queue extraction: {}", e.getMessage());
+            }
+        }
+
+        // ── PRIORITY 2: Variable list type inspection ────────────────────────────
+        if (queueSnapshot.isEmpty()) {
+            for (VariableInfo v : variables) {
+                String type = v.getType() != null ? v.getType().toLowerCase() : "";
+                if ((type.contains("queue") || type.contains("deque") || type.contains("priorityqueue"))
+                        && v.getValue() != null && v.getValue().startsWith("[")) {
+                    queueVariableName = v.getName();
+                    try {
+                        String raw = v.getValue().replaceAll("^\\[|\\]$", "").trim();
+                        if (!raw.isEmpty()) {
+                            String[] parts = raw.split(",\\s*");
+                            queueSnapshot = new ArrayList<>(Arrays.asList(parts));
+                            frontIndex = 0;
+                            rearIndex = queueSnapshot.size() - 1;
+                        }
+                    } catch (Exception ignored) {}
+                    break;
+                }
+            }
+        }
+
+        // ── Array-based circular queue: extract front/rear from variables ────────
+        for (VariableInfo v : variables) {
+            if ("front".equals(v.getName()) || "head".equals(v.getName())) {
+                try { frontIndex = Integer.parseInt(v.getValue()); } catch (NumberFormatException ignored) {}
+            }
+            if ("rear".equals(v.getName()) || "tail".equals(v.getName())) {
+                try { rearIndex = Integer.parseInt(v.getValue()); } catch (NumberFormatException ignored) {}
+            }
+        }
+
+        // ── Operation detection from current code line ───────────────────────────
+        String operation = "QUEUE_UPDATE";
+        if (trimmedLine.contains(".offer(") || trimmedLine.contains(".add(") || trimmedLine.contains(".enqueue(")) {
+            operation = "ENQUEUE";
+        } else if (trimmedLine.contains(".poll(") || trimmedLine.contains(".remove(") || trimmedLine.contains(".dequeue(")) {
+            operation = "DEQUEUE";
+        } else if (trimmedLine.contains(".peek(") || trimmedLine.contains(".element(")) {
+            operation = "PEEK";
+        } else if (trimmedLine.contains(".isEmpty(")) {
+            operation = "QUEUE_UPDATE";
+        } else if (trimmedLine.contains("front") && (trimmedLine.contains("++") || trimmedLine.contains("+="))) {
+            operation = "FRONT_MOVE";
+        } else if (trimmedLine.contains("rear") && (trimmedLine.contains("++") || trimmedLine.contains("+="))) {
+            operation = "REAR_MOVE";
+        } else if (trimmedLine.contains("==") || trimmedLine.contains("!=")) {
+            operation = "COMPARE";
+        }
+
+        return StepMetadata.builder()
+                .dataStructure("QUEUE")
+                .operation(operation)
+                .indices(indices)
+                .pointers(pointers)
+                .queueSnapshot(queueSnapshot)
+                .frontIndex(frontIndex)
+                .rearIndex(rearIndex)
+                .queueVariableName(queueVariableName)
+                .isPriorityQueue(isPriorityQueue)
+                .build();
+    }
+
+    /**
+     * Attempts to extract String representations of elements from a java.util.Collection
+     * object reference via JDI reflection. Works for Stack (extends Vector), ArrayDeque,
+     * LinkedList, PriorityQueue, etc. Falls back gracefully on any reflection failure.
+     */
+    private List<String> extractCollectionElements(ObjectReference collectionRef) {
+        List<String> result = new ArrayList<>();
+        try {
+            ReferenceType refType = collectionRef.referenceType();
+            // Try "elementData" (ArrayList/Vector/Stack backing array)
+            Field elementDataField = refType.fieldByName("elementData");
+            if (elementDataField != null) {
+                Value edVal = collectionRef.getValue(elementDataField);
+                Field sizeField = refType.fieldByName("elementCount");
+                if (sizeField == null) sizeField = refType.fieldByName("size");
+                int size = 0;
+                if (sizeField != null) {
+                    Value sv = collectionRef.getValue(sizeField);
+                    if (sv != null) size = Integer.parseInt(sv.toString());
+                }
+                if (edVal instanceof ArrayReference arrayRef) {
+                    for (int i = 0; i < Math.min(size, arrayRef.length()); i++) {
+                        Value elem = arrayRef.getValue(i);
+                        result.add(elem == null ? "null" : elem.toString());
+                    }
+                }
+                return result;
+            }
+            // Try "elements" (ArrayDeque backing array)
+            Field elementsField = refType.fieldByName("elements");
+            if (elementsField != null) {
+                Value ev = collectionRef.getValue(elementsField);
+                Field headField = refType.fieldByName("head");
+                Field tailField = refType.fieldByName("tail");
+                int head = 0, tail = 0;
+                if (headField != null) { Value hv = collectionRef.getValue(headField); if (hv != null) head = Integer.parseInt(hv.toString()); }
+                if (tailField != null) { Value tv = collectionRef.getValue(tailField); if (tv != null) tail = Integer.parseInt(tv.toString()); }
+                if (ev instanceof ArrayReference arrayRef) {
+                    int len = arrayRef.length();
+                    for (int i = head; i != tail; i = (i + 1) % len) {
+                        Value elem = arrayRef.getValue(i);
+                        result.add(elem == null ? "null" : elem.toString());
+                    }
+                }
+                return result;
+            }
+        } catch (Exception e) {
+            log.debug("extractCollectionElements failed: {}", e.getMessage());
+        }
+        return result;
     }
 
     private String formatValue(Value value) {
