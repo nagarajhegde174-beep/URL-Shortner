@@ -1,0 +1,33 @@
+spring:
+  profiles:
+    active: dev
+  application:
+    name: url-shortener
+
+server:
+  port: 8080
+  servlet:
+    context-path: ""
+
+# Global / Default Configuration
+app:
+  base-url: ${APP_BASE_URL:http://localhost:8080}
+  cookie:
+    secure: ${COOKIE_SECURE:false}
+    same-site: ${COOKIE_SAME_SITE:Strict}
+  jwt:
+    secret: ${JWT_SECRET}
+    access-token-expiry-ms: ${JWT_ACCESS_TOKEN_EXPIRY_MS:900000} # 15 minutes
+    refresh-token-expiry-ms: 604800000 # 7 days (in milliseconds)
+  razorpay:
+    key-id: ${RAZORPAY_KEY_ID}
+    key-secret: ${RAZORPAY_KEY_SECRET}
+    webhook-secret: ${RAZORPAY_WEBHOOK_SECRET}
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: method
+    tags-sorter: alpha
