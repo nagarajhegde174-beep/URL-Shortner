@@ -37,6 +37,8 @@ spring:
       value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
       properties:
         spring.json.trusted.packages: "com.urlshortener.analytics.dto"
+    listener:
+      ack-mode: manual_immediate
 
 # Dev-safe overrides — DO NOT use these in production
 app:
