@@ -4,9 +4,11 @@ import com.urlshortener.auth.dto.AuthResponse;
 import com.urlshortener.auth.dto.LoginRequest;
 import com.urlshortener.auth.dto.MessageResponse;
 import com.urlshortener.auth.dto.RegisterRequest;
+import com.urlshortener.auth.dto.UserProfileResponse;
 import com.urlshortener.auth.service.AuthService;
 import com.urlshortener.config.AppProperties;
 import com.urlshortener.common.exception.UnauthorizedException;
+import com.urlshortener.security.CustomUserDetails;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -14,6 +16,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -57,6 +60,12 @@ public class AuthController {
         authService.logout(rawRefreshToken);
         clearRefreshTokenCookie(response);
         return ResponseEntity.ok(new MessageResponse("Logged out successfully"));
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<UserProfileResponse> getCurrentUser(
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        return ResponseEntity.ok(authService.getCurrentUser(userDetails));
     }
 
     private void setRefreshTokenCookie(HttpServletResponse response, String rawRefreshToken) {

@@ -1,5 +1,6 @@
 package com.urlshortener.url.service;
 
+import com.urlshortener.analytics.repository.ClickRepository;
 import com.urlshortener.common.exception.*;
 import com.urlshortener.config.AppProperties;
 import com.urlshortener.redis.service.RedisCacheService;
@@ -27,7 +28,9 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -35,6 +38,7 @@ import java.util.Set;
 public class UrlService {
 
     private final LinkRepository linkRepository;
+    private final ClickRepository clickRepository;
     private final UserRepository userRepository;
     private final SubscriptionRepository subscriptionRepository;
     private final Base62Service base62Service;
@@ -124,7 +128,8 @@ public class UrlService {
     @Transactional(readOnly = true)
     public Page<UrlResponse> listUrls(CustomUserDetails userDetails, Pageable pageable) {
         Page<Link> links = linkRepository.findByUser(userDetails.getUser(), pageable);
-        return links.map(this::mapToResponse);
+        Map<Long, Long> clickCounts = fetchClickCounts(links.getContent());
+        return links.map(link -> mapToResponse(link, clickCounts.getOrDefault(link.getId(), 0L)));
     }
 
     @Transactional
@@ -217,6 +222,11 @@ public class UrlService {
     }
 
     private UrlResponse mapToResponse(Link link) {
+        long clickCount = clickRepository.countByLinkId(link.getId());
+        return mapToResponse(link, clickCount);
+    }
+
+    private UrlResponse mapToResponse(Link link, long clickCount) {
         String baseUrl = appProperties.getBaseUrl();
         String fullShortUrl = baseUrl + "/" + link.getShortCode();
 
@@ -230,6 +240,19 @@ public class UrlService {
                 .expiresAt(link.getExpiresAt())
                 .createdAt(link.getCreatedAt())
                 .updatedAt(link.getUpdatedAt())
+                .clickCount(clickCount)
                 .build();
+    }
+
+    private Map<Long, Long> fetchClickCounts(List<Link> links) {
+        if (links.isEmpty()) {
+            return Map.of();
+        }
+        List<Long> linkIds = links.stream().map(Link::getId).toList();
+        return clickRepository.countByLinkIds(linkIds).stream()
+                .collect(Collectors.toMap(
+                        row -> ((Number) row[0]).longValue(),
+                        row -> ((Number) row[1]).longValue()
+                ));
     }
 }
