@@ -1,6 +1,6 @@
 package com.urlshortener.redis.service;
 
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Service;
@@ -10,10 +10,14 @@ import java.util.Collections;
 import java.util.UUID;
 
 @Service
-@RequiredArgsConstructor
 public class RedisRateLimiterService {
 
     private final RedisTemplate<String, Object> redisTemplate;
+
+    public RedisRateLimiterService(
+            @Qualifier("objectRedisTemplate") RedisTemplate<String, Object> redisTemplate) {
+        this.redisTemplate = redisTemplate;
+    }
 
     private static final String LUA_SCRIPT =
             "local key = KEYS[1]\n" +
