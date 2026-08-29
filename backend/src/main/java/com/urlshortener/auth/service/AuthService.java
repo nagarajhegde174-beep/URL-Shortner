@@ -3,10 +3,15 @@ package com.urlshortener.auth.service;
 import com.urlshortener.auth.dto.AuthResponse;
 import com.urlshortener.auth.dto.LoginRequest;
 import com.urlshortener.auth.dto.RegisterRequest;
+import com.urlshortener.auth.dto.UserProfileResponse;
 import com.urlshortener.auth.model.RefreshToken;
 import com.urlshortener.config.AppProperties;
 import com.urlshortener.common.exception.BadRequestException;
+import com.urlshortener.security.CustomUserDetails;
 import com.urlshortener.security.JwtUtil;
+import com.urlshortener.subscription.model.Subscription;
+import com.urlshortener.subscription.repository.SubscriptionRepository;
+import com.urlshortener.url.service.UrlService;
 import com.urlshortener.user.model.Plan;
 import com.urlshortener.user.model.Role;
 import com.urlshortener.user.model.User;
@@ -28,6 +33,8 @@ public class AuthService {
     private final JwtUtil jwtUtil;
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
+    private final SubscriptionRepository subscriptionRepository;
+    private final UrlService urlService;
 
     @Transactional
     public AuthResponse register(RegisterRequest request) {
@@ -84,6 +91,22 @@ public class AuthService {
         if (rawRefreshToken != null) {
             refreshTokenService.deleteByToken(rawRefreshToken);
         }
+    }
+
+    @Transactional(readOnly = true)
+    public UserProfileResponse getCurrentUser(CustomUserDetails userDetails) {
+        User user = userDetails.getUser();
+        boolean isPro = urlService.isUserPro(user);
+        Subscription subscription = subscriptionRepository.findByUserId(user.getId()).orElse(null);
+
+        return UserProfileResponse.builder()
+                .id(user.getId())
+                .email(user.getEmail())
+                .role(user.getRole().name())
+                .plan(isPro ? "PRO" : "FREE")
+                .isPro(isPro)
+                .subscriptionExpiresAt(subscription != null ? subscription.getExpiresAt() : null)
+                .build();
     }
 
     private AuthResponse buildAuthResponse(User user, String accessToken, String rawRefreshToken) {

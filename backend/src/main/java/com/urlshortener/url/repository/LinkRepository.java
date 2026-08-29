@@ -14,5 +14,6 @@ public interface LinkRepository extends JpaRepository<Link, Long> {
     Optional<Link> findByShortCode(String shortCode);
     Page<Link> findByUser(User user, Pageable pageable);
     long countByUser(User user);
+    long countByUserAndIsActiveTrue(User user);
     boolean existsByShortCode(String shortCode);
 }

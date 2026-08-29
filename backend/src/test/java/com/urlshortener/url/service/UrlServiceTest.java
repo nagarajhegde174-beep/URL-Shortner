@@ -1,5 +1,6 @@
 package com.urlshortener.url.service;
 
+import com.urlshortener.analytics.repository.ClickRepository;
 import com.urlshortener.common.exception.*;
 import com.urlshortener.config.AppProperties;
 import com.urlshortener.redis.service.RedisCacheService;
@@ -36,6 +37,8 @@ public class UrlServiceTest {
 
     @Mock
     private LinkRepository linkRepository;
+    @Mock
+    private ClickRepository clickRepository;
     @Mock
     private UserRepository userRepository;
     @Mock
@@ -77,6 +80,7 @@ public class UrlServiceTest {
         proUserDetails = new CustomUserDetails(proUser);
 
         lenient().when(appProperties.getBaseUrl()).thenReturn("http://localhost:8080");
+        lenient().when(clickRepository.countByLinkId(any())).thenReturn(0L);
     }
 
     // 1. Base62 Service Verification

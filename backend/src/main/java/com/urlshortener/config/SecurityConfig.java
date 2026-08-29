@@ -53,6 +53,8 @@ public class SecurityConfig {
                 .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                 // Public short URL redirect endpoint (matches single letter/word path)
                 .requestMatchers(HttpMethod.GET, "/{shortCode}").permitAll()
+                // Razorpay webhook — public, signature-verified internally
+                .requestMatchers(HttpMethod.POST, "/api/payments/webhook").permitAll()
                 // All other endpoints require authentication
                 .anyRequest().authenticated()
             )
@@ -65,7 +67,7 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(List.of("http://localhost:5173"));
-        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setExposedHeaders(List.of("Set-Cookie", "Authorization"));
         configuration.setAllowCredentials(true);

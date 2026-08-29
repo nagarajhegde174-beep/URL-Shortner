@@ -17,4 +17,5 @@ public class UrlResponse {
     private Instant expiresAt;
     private Instant createdAt;
     private Instant updatedAt;
+    private long clickCount;
 }
