@@ -1,0 +1,27 @@
+# Environment Secrets
+environment/.env
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# IDE Files
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
+
+# OS Files
+.DS_Store
+Thumbs.db
+
+# Build targets & modules
+**/node_modules/
+**/target/
+**/dist/
+**/out/
+*.log
