@@ -219,20 +219,6 @@ verify-project.bat
 
 ---
 
-## Environment Variables Reference
-
-| Variable | Required | Description |
-|---|---|---|
-| `JWT_SECRET` | ✅ | Min 32-char string for HMAC-SHA256 JWT signing |
-| `RAZORPAY_KEY_ID` | ✅ | Razorpay API Key ID (starts with `rzp_test_` or `rzp_live_`) |
-| `RAZORPAY_KEY_SECRET` | ✅ | Razorpay API Key Secret (backend only, never frontend) |
-| `RAZORPAY_WEBHOOK_SECRET` | ✅ | Razorpay Webhook Secret for HMAC signature verification |
-| `SPRING_DATASOURCE_URL` | ✅ Docker | PostgreSQL JDBC URL |
-| `SPRING_REDIS_HOST` | ✅ Docker | Redis hostname |
-| `SPRING_KAFKA_BOOTSTRAP_SERVERS` | ✅ Docker | Kafka bootstrap address |
-
----
-
 ## Tech Stack
 
 | Layer | Technology |
