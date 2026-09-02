@@ -185,45 +185,6 @@ This starts 5 containers:
 
 ---
 
-## API Reference
-
-### Authentication
-
-| Method | Endpoint | Auth | Description |
-|---|---|---|---|
-| POST | `/api/auth/register` | — | Register new user |
-| POST | `/api/auth/login` | — | Login, returns access token |
-| POST | `/api/auth/refresh` | Cookie | Refresh access token |
-| POST | `/api/auth/logout` | ✅ JWT | Logout |
-| GET | `/api/auth/me` | ✅ JWT | Get profile |
-
-### URL Management
-
-| Method | Endpoint | Auth | Description |
-|---|---|---|---|
-| POST | `/api/links` | ✅ JWT | Create short URL |
-| GET | `/api/links` | ✅ JWT | List all user links |
-| PUT | `/api/links/{id}` | ✅ JWT | Update link settings |
-| DELETE | `/api/links/{id}` | ✅ JWT | Delete link |
-| GET | `/{shortCode}` | — | Redirect to long URL |
-
-### Analytics
-
-| Method | Endpoint | Auth | Description |
-|---|---|---|---|
-| GET | `/api/analytics/dashboard` | ✅ JWT | Dashboard statistics |
-| GET | `/api/analytics/links/{id}` | ✅ JWT | Per-link analytics |
-
-### Payments
-
-| Method | Endpoint | Auth | Description |
-|---|---|---|---|
-| POST | `/api/payments/orders` | ✅ JWT | Create Razorpay order |
-| POST | `/api/payments/verify` | ✅ JWT | Verify payment signature |
-| POST | `/api/payments/webhook` | — (HMAC) | Razorpay webhook handler |
-
----
-
 ## Running Tests
 
 ### Backend Tests (45 unit + integration tests)
@@ -269,29 +230,6 @@ verify-project.bat
 | `SPRING_DATASOURCE_URL` | ✅ Docker | PostgreSQL JDBC URL |
 | `SPRING_REDIS_HOST` | ✅ Docker | Redis hostname |
 | `SPRING_KAFKA_BOOTSTRAP_SERVERS` | ✅ Docker | Kafka bootstrap address |
-
----
-
-## Razorpay Webhook Notes
-
-> [!IMPORTANT]
-> Razorpay requires a **publicly reachable HTTPS URL** to deliver real webhook events.
-> Testing webhooks against `localhost` will not work.
->
-> For local webhook testing, use a tunnel tool such as [ngrok](https://ngrok.com/) or [localtunnel](https://theboroer.github.io/localtunnel-www/) to expose your local backend to the internet.
->
-> In production, configure the webhook URL as:
-> `https://yourdomain.com/api/payments/webhook`
-
----
-
-## Security Notes
-
-- **Access Token:** Stored in-memory only (Zustand store). Never written to `localStorage` or `sessionStorage`.
-- **Refresh Token:** Sent via HttpOnly cookie. Handled transparently by Axios interceptors.
-- **HMAC Verification:** All Razorpay payment signatures are verified using `MessageDigest.isEqual()` (constant-time comparison) on the backend.
-- **Rate Limiting:** Sliding-window Lua script atomically enforces per-IP request limits via Redis sorted sets.
-- **Secrets:** No credentials are hardcoded in any committed file. All sensitive values are injected via environment variables.
 
 ---
 
