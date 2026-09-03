@@ -78,7 +78,12 @@ export const LoginPage: React.FC = () => {
             </div>
 
             <div className="mb-4">
-              <label htmlFor="passwordInput" className="form-label small fw-semibold text-secondary">Password</label>
+              <div className="d-flex justify-content-between align-items-center mb-1">
+                <label htmlFor="passwordInput" className="form-label mb-0 small fw-semibold text-secondary">Password</label>
+                <Link to="/forgot-password" className="small text-info fw-semibold text-decoration-none">
+                  Forgot Password?
+                </Link>
+              </div>
               <div className="input-group">
                 <span className="input-group-text bg-white border-end-0 text-muted">
                   <Lock size={18} />

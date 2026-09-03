@@ -1,10 +1,6 @@
 package com.urlshortener.auth.controller;
 
-import com.urlshortener.auth.dto.AuthResponse;
-import com.urlshortener.auth.dto.LoginRequest;
-import com.urlshortener.auth.dto.MessageResponse;
-import com.urlshortener.auth.dto.RegisterRequest;
-import com.urlshortener.auth.dto.UserProfileResponse;
+import com.urlshortener.auth.dto.*;
 import com.urlshortener.auth.service.AuthService;
 import com.urlshortener.config.AppProperties;
 import com.urlshortener.common.exception.UnauthorizedException;
@@ -60,6 +56,16 @@ public class AuthController {
         authService.logout(rawRefreshToken);
         clearRefreshTokenCookie(response);
         return ResponseEntity.ok(new MessageResponse("Logged out successfully"));
+    }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<ForgotPasswordResponse> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
+        return ResponseEntity.ok(authService.forgotPassword(request));
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<MessageResponse> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
+        return ResponseEntity.ok(authService.resetPassword(request));
     }
 
     @GetMapping("/me")

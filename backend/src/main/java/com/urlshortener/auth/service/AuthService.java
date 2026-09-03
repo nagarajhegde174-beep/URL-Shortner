@@ -1,12 +1,12 @@
 package com.urlshortener.auth.service;
 
-import com.urlshortener.auth.dto.AuthResponse;
-import com.urlshortener.auth.dto.LoginRequest;
-import com.urlshortener.auth.dto.RegisterRequest;
-import com.urlshortener.auth.dto.UserProfileResponse;
+import com.urlshortener.auth.dto.*;
+import com.urlshortener.auth.model.PasswordResetToken;
 import com.urlshortener.auth.model.RefreshToken;
+import com.urlshortener.auth.repository.PasswordResetTokenRepository;
 import com.urlshortener.config.AppProperties;
 import com.urlshortener.common.exception.BadRequestException;
+import com.urlshortener.common.exception.ResourceNotFoundException;
 import com.urlshortener.security.CustomUserDetails;
 import com.urlshortener.security.JwtUtil;
 import com.urlshortener.subscription.model.Subscription;
@@ -24,12 +24,20 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+
 @Service
 @RequiredArgsConstructor
 public class AuthService {
 
     private final UserRepository userRepository;
     private final RefreshTokenService refreshTokenService;
+    private final PasswordResetTokenRepository passwordResetTokenRepository;
     private final JwtUtil jwtUtil;
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
@@ -93,6 +101,61 @@ public class AuthService {
         }
     }
 
+    @Transactional
+    public ForgotPasswordResponse forgotPassword(ForgotPasswordRequest request) {
+        User user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new ResourceNotFoundException("No account found with this email address"));
+
+        // Delete previous reset tokens for this user
+        passwordResetTokenRepository.deleteByUser(user);
+
+        // Generate secure 6-digit token code
+        String rawToken = String.format("%06d", new SecureRandom().nextInt(1000000));
+        String hashedToken = hashToken(rawToken);
+
+        PasswordResetToken resetToken = PasswordResetToken.builder()
+                .user(user)
+                .tokenHash(hashedToken)
+                .expiresAt(Instant.now().plus(15, ChronoUnit.MINUTES))
+                .used(false)
+                .build();
+
+        passwordResetTokenRepository.save(resetToken);
+
+        return ForgotPasswordResponse.builder()
+                .message("Password reset token generated successfully.")
+                .resetToken(rawToken)
+                .expiresInMinutes(15)
+                .build();
+    }
+
+    @Transactional
+    public MessageResponse resetPassword(ResetPasswordRequest request) {
+        String hashedToken = hashToken(request.getToken().trim());
+        PasswordResetToken token = passwordResetTokenRepository.findByTokenHash(hashedToken)
+                .orElseThrow(() -> new BadRequestException("Invalid or expired password reset token"));
+
+        if (token.isUsed()) {
+            throw new BadRequestException("Password reset token has already been used");
+        }
+
+        if (token.getExpiresAt().isBefore(Instant.now())) {
+            throw new BadRequestException("Password reset token has expired. Please request a new one");
+        }
+
+        User user = token.getUser();
+        user.setPasswordHash(passwordEncoder.encode(request.getNewPassword()));
+        userRepository.save(user);
+
+        token.setUsed(true);
+        passwordResetTokenRepository.save(token);
+
+        // Revoke existing session tokens
+        refreshTokenService.deleteByUser(user);
+
+        return new MessageResponse("Password has been reset successfully. Please sign in with your new password.");
+    }
+
     @Transactional(readOnly = true)
     public UserProfileResponse getCurrentUser(CustomUserDetails userDetails) {
         User user = userDetails.getUser();
@@ -123,4 +186,21 @@ public class AuthService {
                 .refreshToken(rawRefreshToken)
                 .build();
     }
+
+    private String hashToken(String token) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] hash = digest.digest(token.getBytes(StandardCharsets.UTF_8));
+            StringBuilder hexString = new StringBuilder();
+            for (byte b : hash) {
+                String hex = Integer.toHexString(0xff & b);
+                if (hex.length() == 1) hexString.append('0');
+                hexString.append(hex);
+            }
+            return hexString.toString();
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException("SHA-256 algorithm not found", e);
+        }
+    }
 }
+
