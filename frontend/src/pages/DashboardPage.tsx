@@ -342,7 +342,14 @@ export const DashboardPage: React.FC = () => {
                   <tr key={link.id}>
                     <td>
                       <div className="d-flex align-items-center gap-2">
-                        <span className="fw-semibold text-primary">{link.shortCode}</span>
+                        <a 
+                          href={link.shortUrl} 
+                          target="_blank" 
+                          rel="noopener noreferrer" 
+                          className="fw-semibold text-primary text-decoration-none hover-underline"
+                        >
+                          {link.shortCode}
+                        </a>
                         <button 
                           className="btn btn-link p-0 text-muted hover-info" 
                           onClick={() => copyToClipboard(link.shortUrl)}
@@ -354,7 +361,7 @@ export const DashboardPage: React.FC = () => {
                           href={link.shortUrl} 
                           target="_blank" 
                           rel="noopener noreferrer" 
-                          className="text-muted"
+                          className="text-muted hover-info"
                           aria-label="Open short link"
                         >
                           <ExternalLink size={14} />
