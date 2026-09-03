@@ -1,6 +1,19 @@
 # URL Shortener SaaS
 
-A production-grade **URL Shortener SaaS monolith** built with **Spring Boot 3**, **React + Vite + Bootstrap**, **PostgreSQL**, **Redis**, **Kafka**, and **Razorpay** payments. Supports FREE and PRO plans with full analytics, rate limiting, expiring links, and custom short codes.
+<p align="left">
+  <img src="https://img.shields.io/badge/JAVA-21-ED8B00?style=for-the-badge&logo=openjdk&logoColor=white" alt="Java 21" />
+  <img src="https://img.shields.io/badge/SPRING_BOOT-3.3.2-6DB33F?style=for-the-badge&logo=springboot&logoColor=white" alt="Spring Boot 3.3.2" />
+  <img src="https://img.shields.io/badge/REACT-19-20232A?style=for-the-badge&logo=react&logoColor=61DAFB" alt="React 19" />
+  <img src="https://img.shields.io/badge/VITE-8-646CFF?style=for-the-badge&logo=vite&logoColor=white" alt="Vite 8" />
+  <img src="https://img.shields.io/badge/BOOTSTRAP-5.3-7952B3?style=for-the-badge&logo=bootstrap&logoColor=white" alt="Bootstrap 5.3" />
+  <img src="https://img.shields.io/badge/POSTGRESQL-15-4169E1?style=for-the-badge&logo=postgresql&logoColor=white" alt="PostgreSQL 15" />
+  <img src="https://img.shields.io/badge/REDIS-7-DC382D?style=for-the-badge&logo=redis&logoColor=white" alt="Redis 7" />
+  <img src="https://img.shields.io/badge/KAFKA-3.7-231F20?style=for-the-badge&logo=apachekafka&logoColor=white" alt="Kafka 3.7" />
+  <img src="https://img.shields.io/badge/DOCKER-Compose-2496ED?style=for-the-badge&logo=docker&logoColor=white" alt="Docker" />
+  <img src="https://img.shields.io/badge/LICENSE-MIT-yellow?style=for-the-badge" alt="License MIT" />
+</p>
+
+A production-grade **URL Shortener SaaS monolith** designed for speed, security, and scalability.
 
 ---
 
@@ -217,23 +230,4 @@ npm run build     # TypeScript compile + Vite production bundle
 verify-project.bat
 ```
 
----
 
-## Tech Stack
-
-| Layer | Technology |
-|---|---|
-| Backend Framework | Spring Boot 3.3.2 / Java 21 |
-| Security | Spring Security + JJWT 0.12.5 |
-| Database | PostgreSQL 15 + Flyway Migrations |
-| Cache / Rate Limiter | Redis 7 |
-| Messaging | Apache Kafka 3.7 (KRaft mode) |
-| Payment Gateway | Razorpay Java SDK 1.4.3 |
-| Frontend Framework | React 19 + Vite 8 + TypeScript 6 |
-| UI Library | Bootstrap 5.3 |
-| Charts | Chart.js 4 + react-chartjs-2 |
-| HTTP Client | Axios 1.x (with silent refresh interceptor) |
-| State Management | Zustand 5 |
-| API Documentation | SpringDoc OpenAPI (Swagger UI) |
-| Containerization | Docker + Docker Compose |
-| CI/CD | GitHub Actions |
