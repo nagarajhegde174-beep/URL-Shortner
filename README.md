@@ -13,7 +13,7 @@
   <img src="https://img.shields.io/badge/LICENSE-MIT-yellow?style=for-the-badge" alt="License MIT" />
 </p>
 
-A production-grade **URL Shortener SaaS monolith** designed for speed, security, and scalability.
+<p align ="center"> A production-grade URL Shortener monolith designed for speed, security, and scalability.</p>
 
 ---
 
