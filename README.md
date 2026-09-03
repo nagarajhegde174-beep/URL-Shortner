@@ -1,6 +1,6 @@
-# URL Shortener SaaS
+<h1 align="center">URL Shortener</h1>
 
-<p align="left">
+<p align="center">
   <img src="https://img.shields.io/badge/JAVA-21-ED8B00?style=for-the-badge&logo=openjdk&logoColor=white" alt="Java 21" />
   <img src="https://img.shields.io/badge/SPRING_BOOT-3.3.2-6DB33F?style=for-the-badge&logo=springboot&logoColor=white" alt="Spring Boot 3.3.2" />
   <img src="https://img.shields.io/badge/REACT-19-20232A?style=for-the-badge&logo=react&logoColor=61DAFB" alt="React 19" />
@@ -230,4 +230,5 @@ npm run build     # TypeScript compile + Vite production bundle
 verify-project.bat
 ```
 
+---
 
