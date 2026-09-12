@@ -119,7 +119,7 @@ export const UpgradePage: React.FC = () => {
   }
 
   return (
-    <div className="container-fluid min-vh-100 py-5 px-3 px-md-5" style={{ backgroundColor: '#fff1f2' /* Soft Rose */ }}>
+    <div className="upgrade-page-bg container-fluid min-vh-100 py-5 px-3 px-md-5">
       <div className="row justify-content-center">
         <div className="col-12 col-md-8 col-lg-6">
           
@@ -129,14 +129,14 @@ export const UpgradePage: React.FC = () => {
               <Sparkles size={14} className="me-1 align-middle" />
               SaaS Pro Upgrade
             </span>
-            <h1 className="fw-extrabold text-dark display-6 mt-2">ZipLink Premium</h1>
+            <h1 className="fw-extrabold display-6 mt-2">ZipLink Premium</h1>
             <p className="text-secondary small">
               Supercharge your link sharing with custom branded aliases and real-time deep analytics.
             </p>
           </div>
 
-          {/* Pricing white Card */}
-          <div className="card border-0 shadow-lg rounded-4 p-4 p-md-5 bg-white text-dark mb-4 position-relative overflow-hidden">
+          {/* Pricing Card */}
+          <div className="card border-0 shadow-lg rounded-4 p-4 p-md-5 mb-4 position-relative overflow-hidden">
             {isPro && (
               <div className="position-absolute top-0 end-0 bg-warning text-dark fw-bold px-4 py-2 rounded-start-pill small">
                 ACTIVE PLAN
@@ -149,7 +149,7 @@ export const UpgradePage: React.FC = () => {
                 <span className="text-muted small">One-time payment. Valid for 30 days.</span>
               </div>
               <div className="text-end">
-                <span className="fs-1 fw-extrabold text-dark">₹499</span>
+                <span className="fs-1 fw-extrabold">₹499</span>
                 <span className="text-muted d-block small">/ 30 Days</span>
               </div>
             </div>

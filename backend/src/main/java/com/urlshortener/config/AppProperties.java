@@ -15,6 +15,7 @@ public class AppProperties {
     private final Cookie cookie = new Cookie();
     private final Jwt jwt = new Jwt();
     private final Razorpay razorpay = new Razorpay();
+    private final Mail mail = new Mail();
 
     @Getter
     @Setter
@@ -37,5 +38,11 @@ public class AppProperties {
         private String keyId;
         private String keySecret;
         private String webhookSecret;
+    }
+
+    @Getter
+    @Setter
+    public static class Mail {
+        private String from = "noreply@ziplink.app";
     }
 }

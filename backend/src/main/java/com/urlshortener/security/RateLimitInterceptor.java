@@ -63,6 +63,20 @@ public class RateLimitInterceptor implements HandlerInterceptor {
             }
         }
 
+        // 3. Forgot-Password Rate Limiting (POST /api/auth/forgot-password)
+        // Prevents email spam and brute-force abuse — 5 requests per 10 minutes per IP
+        else if (uri.equals("/api/auth/forgot-password") && method.equalsIgnoreCase(HttpMethod.POST.name())) {
+            String clientIp = getClientIp(request);
+            String hashedIp = hashIp(clientIp);
+            String key = "forgot-pw:ip:" + hashedIp;
+            int limit = 5; // 5 requests per 10 minutes per IP
+
+            if (!redisRateLimiterService.isAllowed(key, limit, 600)) {
+                log.warn("Rate limit exceeded for forgot-password by IP: {}", hashedIp);
+                throw new RateLimitException("Too many password reset requests. Please try again later.");
+            }
+        }
+
         return true;
     }
 

@@ -2,6 +2,7 @@ import React from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import api from '../lib/axios'
+import { useTheme } from '../context/ThemeContext'
 import { ArrowLeft, BarChart3, Globe, Smartphone, Monitor } from 'lucide-react'
 import { Line, Doughnut, Bar } from 'react-chartjs-2'
 import {
@@ -57,6 +58,10 @@ interface LinkAnalyticsResponse {
 export const LinkAnalyticsPage: React.FC = () => {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
+  const { theme } = useTheme()
+
+  const textColor = theme === 'dark' ? '#cbd5e1' : '#64748b'
+  const gridColor = theme === 'dark' ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.06)'
 
   const { data: analytics, isLoading, error } = useQuery<LinkAnalyticsResponse>({
     queryKey: ['linkAnalytics', id],
@@ -69,7 +74,7 @@ export const LinkAnalyticsPage: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="d-flex justify-content-center align-items-center min-vh-100 bg-light">
+      <div className="d-flex justify-content-center align-items-center min-vh-100">
         <div className="spinner-border text-info" role="status">
           <span className="visually-hidden">Loading Analytics...</span>
         </div>
@@ -113,7 +118,7 @@ export const LinkAnalyticsPage: React.FC = () => {
         label: 'Clicks',
         data: analytics.clicksOverTime.map(p => p.clicks),
         borderColor: skyBlue,
-        backgroundColor: 'rgba(14, 165, 233, 0.1)',
+        backgroundColor: theme === 'dark' ? 'rgba(14, 165, 233, 0.2)' : 'rgba(14, 165, 233, 0.1)',
         tension: 0.3,
         fill: true,
         pointBackgroundColor: skyBlue,
@@ -129,9 +134,14 @@ export const LinkAnalyticsPage: React.FC = () => {
       legend: { display: false }
     },
     scales: {
+      x: {
+        ticks: { color: textColor },
+        grid: { color: gridColor }
+      },
       y: {
         beginAtZero: true,
-        ticks: { precision: 0 }
+        ticks: { precision: 0, color: textColor },
+        grid: { color: gridColor }
       }
     }
   }
@@ -154,7 +164,7 @@ export const LinkAnalyticsPage: React.FC = () => {
     plugins: {
       legend: {
         position: 'bottom' as const,
-        labels: { boxWidth: 12, padding: 15 }
+        labels: { boxWidth: 12, padding: 15, color: textColor }
       }
     }
   }
@@ -179,7 +189,15 @@ export const LinkAnalyticsPage: React.FC = () => {
       legend: { display: false }
     },
     scales: {
-      y: { beginAtZero: true, ticks: { precision: 0 } }
+      x: {
+        ticks: { color: textColor },
+        grid: { color: gridColor }
+      },
+      y: { 
+        beginAtZero: true, 
+        ticks: { precision: 0, color: textColor },
+        grid: { color: gridColor }
+      }
     }
   }
 
@@ -200,7 +218,7 @@ export const LinkAnalyticsPage: React.FC = () => {
       {/* Back button & Header */}
       <div className="mb-4">
         <button 
-          className="btn btn-light d-inline-flex align-items-center gap-2 border shadow-sm mb-3"
+          className="btn btn-outline-secondary d-inline-flex align-items-center gap-2 shadow-sm mb-3"
           onClick={() => navigate('/dashboard')}
         >
           <ArrowLeft size={16} />
@@ -213,11 +231,11 @@ export const LinkAnalyticsPage: React.FC = () => {
               Short Code: <strong className="text-primary">{analytics.shortCode}</strong>
             </p>
           </div>
-          <div className="bg-white px-3 py-2 border rounded shadow-sm d-flex align-items-center gap-2">
+          <div className="px-3 py-2 border rounded shadow-sm d-flex align-items-center gap-2" style={{ backgroundColor: 'var(--card-bg)' }}>
             <BarChart3 className="text-info" size={20} />
             <div>
               <span className="small text-secondary d-block lh-1">Total Clicks</span>
-              <strong className="fs-5 text-dark">{analytics.totalClicks}</strong>
+              <strong className="fs-5">{analytics.totalClicks}</strong>
             </div>
           </div>
         </div>
@@ -247,7 +265,7 @@ export const LinkAnalyticsPage: React.FC = () => {
 
       {/* Line Chart: Clicks over time */}
       <div className="card saas-card border-0 mb-4 shadow-sm">
-        <h5 className="fw-bold text-dark mb-3">Clicks Over Time</h5>
+        <h5 className="fw-bold mb-3">Clicks Over Time</h5>
         <div style={{ height: '300px' }}>
           <Line data={clicksOverTimeData} options={clicksOverTimeOptions} />
         </div>
@@ -258,7 +276,7 @@ export const LinkAnalyticsPage: React.FC = () => {
         {/* Device Breakdown */}
         <div className="col-12 col-md-6 col-lg-4">
           <div className="card saas-card border-0 h-100 shadow-sm">
-            <h5 className="fw-bold text-dark mb-3 d-flex align-items-center gap-2">
+            <h5 className="fw-bold mb-3 d-flex align-items-center gap-2">
               <Smartphone size={18} className="text-secondary" />
               <span>Devices</span>
             </h5>
@@ -275,7 +293,7 @@ export const LinkAnalyticsPage: React.FC = () => {
         {/* Browser Breakdown */}
         <div className="col-12 col-md-6 col-lg-4">
           <div className="card saas-card border-0 h-100 shadow-sm">
-            <h5 className="fw-bold text-dark mb-3 d-flex align-items-center gap-2">
+            <h5 className="fw-bold mb-3 d-flex align-items-center gap-2">
               <Globe size={18} className="text-secondary" />
               <span>Browsers</span>
             </h5>
@@ -292,7 +310,7 @@ export const LinkAnalyticsPage: React.FC = () => {
         {/* OS Breakdown */}
         <div className="col-12 col-md-6 col-lg-4">
           <div className="card saas-card border-0 h-100 shadow-sm">
-            <h5 className="fw-bold text-dark mb-3 d-flex align-items-center gap-2">
+            <h5 className="fw-bold mb-3 d-flex align-items-center gap-2">
               <Monitor size={18} className="text-secondary" />
               <span>Operating Systems</span>
             </h5>
@@ -309,8 +327,8 @@ export const LinkAnalyticsPage: React.FC = () => {
 
       {/* Referrer Table section */}
       <div className="card border-0 shadow-sm rounded-3">
-        <div className="card-header bg-white py-3 border-0">
-          <h5 className="mb-0 fw-bold text-dark">Top Referrers</h5>
+        <div className="card-header py-3 border-0">
+          <h5 className="mb-0 fw-bold">Top Referrers</h5>
         </div>
         <div className="table-responsive">
           <table className="table custom-table mb-0">
@@ -333,7 +351,7 @@ export const LinkAnalyticsPage: React.FC = () => {
                     <td className="fw-medium text-secondary">
                       {item.label || 'Direct / None'}
                     </td>
-                    <td className="text-end fw-bold text-dark">{item.count}</td>
+                    <td className="text-end fw-bold">{item.count}</td>
                   </tr>
                 ))
               )}

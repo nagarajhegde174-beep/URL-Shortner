@@ -3,17 +3,50 @@
 <p align="center">
   <img src="https://img.shields.io/badge/JAVA-21-ED8B00?style=for-the-badge&logo=openjdk&logoColor=white" alt="Java 21" />
   <img src="https://img.shields.io/badge/SPRING_BOOT-3.3.2-6DB33F?style=for-the-badge&logo=springboot&logoColor=white" alt="Spring Boot 3.3.2" />
+  <img src="https://img.shields.io/badge/SPRING_SECURITY-6.3-6DB33F?style=for-the-badge&logo=springsecurity&logoColor=white" alt="Spring Security" />
+  <img src="https://img.shields.io/badge/JWT-0.12.5-000000?style=for-the-badge&logo=jsonwebtokens&logoColor=white" alt="JWT" />
+  <img src="https://img.shields.io/badge/TYPESCRIPT-6.0-3178C6?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript" />
   <img src="https://img.shields.io/badge/REACT-19-20232A?style=for-the-badge&logo=react&logoColor=61DAFB" alt="React 19" />
-  <img src="https://img.shields.io/badge/VITE-8-646CFF?style=for-the-badge&logo=vite&logoColor=white" alt="Vite 8" />
+  <img src="https://img.shields.io/badge/VITE-8.2-646CFF?style=for-the-badge&logo=vite&logoColor=white" alt="Vite 8" />
   <img src="https://img.shields.io/badge/BOOTSTRAP-5.3-7952B3?style=for-the-badge&logo=bootstrap&logoColor=white" alt="Bootstrap 5.3" />
   <img src="https://img.shields.io/badge/POSTGRESQL-15-4169E1?style=for-the-badge&logo=postgresql&logoColor=white" alt="PostgreSQL 15" />
   <img src="https://img.shields.io/badge/REDIS-7-DC382D?style=for-the-badge&logo=redis&logoColor=white" alt="Redis 7" />
   <img src="https://img.shields.io/badge/KAFKA-3.7-231F20?style=for-the-badge&logo=apachekafka&logoColor=white" alt="Kafka 3.7" />
+  <img src="https://img.shields.io/badge/RAZORPAY-1.4.3-02042B?style=for-the-badge&logo=razorpay&logoColor=3395FF" alt="Razorpay" />
+  <img src="https://img.shields.io/badge/SWAGGER-OpenAPI_3.0-85EA2D?style=for-the-badge&logo=swagger&logoColor=black" alt="Swagger" />
   <img src="https://img.shields.io/badge/DOCKER-Compose-2496ED?style=for-the-badge&logo=docker&logoColor=white" alt="Docker" />
+  <img src="https://img.shields.io/badge/NGINX-1.26-009639?style=for-the-badge&logo=nginx&logoColor=white" alt="Nginx" />
   <img src="https://img.shields.io/badge/LICENSE-MIT-yellow?style=for-the-badge" alt="License MIT" />
 </p>
 
 <p align ="center"> A production-grade URL Shortener monolith designed for speed, security, and scalability.</p>
+
+---
+
+## 🛠️ Tech Stack
+
+### Backend
+- **Core Framework**: Java 21 & Spring Boot 3.3.2
+- **Security & Auth**: Spring Security, JJWT 0.12.5 (Access Tokens in memory + Refresh Tokens in HttpOnly Cookies)
+- **Database & Persistence**: PostgreSQL 15, Spring Data JPA (Hibernate), Flyway DB Migrations
+- **Caching & Rate Limiting**: Redis 7 (Redirect caching, sliding window Lua rate limiter)
+- **Messaging & Analytics**: Apache Kafka 3.7 / Confluent 7.5.0 (Asynchronous event publishing & consumption)
+- **Email Notifications**: Spring Boot Mail / JavaMail (HTML email password reset flow)
+- **Payment Integration**: Razorpay Java SDK 1.4.3 (PRO Subscription payments & webhook signature verification)
+- **API Documentation**: Springdoc OpenAPI 2.5.0 / Swagger UI 3.0
+- **Build Tool**: Apache Maven 3.9+
+
+### Frontend
+- **Framework & Runtime**: React 19, Vite 8.2, TypeScript 6.0
+- **UI Framework & Styling**: Bootstrap 5.3, Custom Dark/Light Theme System (CSS Variables + React Context)
+- **State & Data Fetching**: Zustand 5.0 (Auth state), TanStack Query (React Query v5)
+- **HTTP Client**: Axios 1.20 (With automatic 401 token refresh queue interceptor)
+- **Data Visualization**: Chart.js 4.5 & `react-chartjs-2` (Theme-aware analytics charts)
+- **UI Icons & Toast**: Lucide React icons, `react-hot-toast` notifications
+
+### DevOps & Infrastructure
+- **Containerization**: Docker & Docker Compose
+- **Web Server & Reverse Proxy**: Nginx (Production static build server & `/api` proxy)
 
 ---
 
@@ -29,7 +62,7 @@ graph TD
     end
 
     subgraph "Backend (Port 8080)"
-        SpringBoot["Spring Boot 3 / Java 21\n- JWT Auth\n- URL CRUD\n- Redirect\n- Rate Limiting\n- Analytics API\n- Razorpay Payments"]
+        SpringBoot["Spring Boot 3 / Java 21\n- JWT Auth\n- URL CRUD\n- Redirect\n- Rate Limiting\n- Analytics API\n- Razorpay Payments\n- SMTP Mail"]
     end
 
     subgraph "Data & Messaging"
@@ -59,12 +92,14 @@ graph TD
 | **Custom Short Codes** | PRO plan users can specify a custom alias |
 | **Link Expiry** | Links can be set to expire at a specific timestamp |
 | **JWT Auth** | Access tokens stored **in memory only** (Zustand), refresh tokens via HttpOnly cookies |
+| **Forgot Password & Email** | Real email password reset flow via Spring Boot Mail / SMTP |
+| **Dark / Light Theme** | Production-quality dark and light mode system using CSS variables and React Context |
 | **Redis URL Cache** | Redirects check Redis first to minimize database load |
 | **Redis Rate Limiting** | Sliding-window Lua-script rate limiter enforced per IP/endpoint |
 | **Kafka Analytics** | Click events published asynchronously to Kafka; persisted via consumer |
 | **Analytics API** | Device, browser, OS, referrer, and click-timeline breakdowns |
 | **Razorpay PRO** | ₹499/30-day subscription activated via server-side signature verification |
-| **React Frontend** | Responsive SaaS UI with Bootstrap and Chart.js dashboards |
+| **React Frontend** | Responsive SaaS UI with Bootstrap, Lucide icons, and Chart.js dashboards |
 
 ---
 

@@ -4,9 +4,8 @@ import com.urlshortener.auth.dto.*;
 import com.urlshortener.auth.model.PasswordResetToken;
 import com.urlshortener.auth.model.RefreshToken;
 import com.urlshortener.auth.repository.PasswordResetTokenRepository;
-import com.urlshortener.config.AppProperties;
 import com.urlshortener.common.exception.BadRequestException;
-import com.urlshortener.common.exception.ResourceNotFoundException;
+import com.urlshortener.redis.service.RedisRateLimiterService;
 import com.urlshortener.security.CustomUserDetails;
 import com.urlshortener.security.JwtUtil;
 import com.urlshortener.subscription.model.Subscription;
@@ -17,6 +16,7 @@ import com.urlshortener.user.model.Role;
 import com.urlshortener.user.model.User;
 import com.urlshortener.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -30,9 +30,11 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class AuthService {
 
     private final UserRepository userRepository;
@@ -43,6 +45,15 @@ public class AuthService {
     private final AuthenticationManager authenticationManager;
     private final SubscriptionRepository subscriptionRepository;
     private final UrlService urlService;
+    private final EmailService emailService;
+    private final RedisRateLimiterService redisRateLimiterService;
+
+    /** Generic message returned for both existing and non-existing emails — prevents account enumeration. */
+    private static final String FORGOT_PASSWORD_GENERIC_RESPONSE =
+            "If an account exists for this email, a password reset code has been sent.";
+
+    /** Resend cooldown: 1 request per 60 seconds per user. */
+    private static final int RESEND_COOLDOWN_SECONDS = 60;
 
     @Transactional
     public AuthResponse register(RegisterRequest request) {
@@ -101,16 +112,40 @@ public class AuthService {
         }
     }
 
+    /**
+     * Handles forgot-password requests.
+     *
+     * Security notes:
+     * - Returns the same generic message regardless of whether the email exists (prevents enumeration).
+     * - The raw reset token is NEVER returned in the response, never logged, only emailed.
+     * - Previous tokens for this user are invalidated before generating a new one.
+     * - A per-user resend cooldown is enforced via Redis (1 request per 60 seconds).
+     */
     @Transactional
-    public ForgotPasswordResponse forgotPassword(ForgotPasswordRequest request) {
-        User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new ResourceNotFoundException("No account found with this email address"));
+    public MessageResponse forgotPassword(ForgotPasswordRequest request) {
+        Optional<User> userOpt = userRepository.findByEmail(request.getEmail());
 
-        // Delete previous reset tokens for this user
+        // Return generic response for non-existent email — prevents account enumeration
+        if (userOpt.isEmpty()) {
+            return new MessageResponse(FORGOT_PASSWORD_GENERIC_RESPONSE);
+        }
+
+        User user = userOpt.get();
+
+        // Enforce per-user resend cooldown (1 per 60 seconds)
+        String cooldownKey = "forgot-pw-cooldown:" + user.getId();
+        if (!redisRateLimiterService.isAllowed(cooldownKey, 1, RESEND_COOLDOWN_SECONDS)) {
+            throw new BadRequestException(
+                    "Please wait before requesting another reset code. A new code can be sent every 60 seconds.");
+        }
+
+        // Invalidate any existing reset tokens for this user
         passwordResetTokenRepository.deleteByUser(user);
 
-        // Generate secure 6-digit token code
-        String rawToken = String.format("%06d", new SecureRandom().nextInt(1000000));
+        // Generate cryptographically secure 6-digit token
+        String rawToken = String.format("%06d", new SecureRandom().nextInt(1_000_000));
+
+        // Store only the hash — never the raw token
         String hashedToken = hashToken(rawToken);
 
         PasswordResetToken resetToken = PasswordResetToken.builder()
@@ -122,11 +157,10 @@ public class AuthService {
 
         passwordResetTokenRepository.save(resetToken);
 
-        return ForgotPasswordResponse.builder()
-                .message("Password reset token generated successfully.")
-                .resetToken(rawToken)
-                .expiresInMinutes(15)
-                .build();
+        // Send the raw token by email — it is never returned in the response body
+        emailService.sendPasswordResetEmail(user.getEmail(), rawToken);
+
+        return new MessageResponse(FORGOT_PASSWORD_GENERIC_RESPONSE);
     }
 
     @Transactional
@@ -150,7 +184,7 @@ public class AuthService {
         token.setUsed(true);
         passwordResetTokenRepository.save(token);
 
-        // Revoke existing session tokens
+        // Revoke all existing refresh sessions so old sessions cannot be reused after password change
         refreshTokenService.deleteByUser(user);
 
         return new MessageResponse("Password has been reset successfully. Please sign in with your new password.");
@@ -203,4 +237,3 @@ public class AuthService {
         }
     }
 }
-

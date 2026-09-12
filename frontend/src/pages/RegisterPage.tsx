@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { Link, useNavigate, Navigate } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
 import { Link2, Mail, Lock, Loader2 } from 'lucide-react'
+import { ThemeToggle } from '../components/ui/ThemeToggle'
 import api from '../lib/axios'
 import toast from 'react-hot-toast'
 
@@ -54,12 +55,16 @@ export const RegisterPage: React.FC = () => {
   }
 
   return (
-    <div className="min-vh-100 d-flex align-items-center justify-content-center bg-light px-3">
-      <div className="card shadow border-0 rounded-3 w-100" style={{ maxWidth: '420px' }}>
+    <div className="auth-page-bg min-vh-100 d-flex align-items-center justify-content-center px-3 position-relative">
+      <div className="position-absolute top-0 end-0 p-3 p-md-4">
+        <ThemeToggle variant="icon" />
+      </div>
+
+      <div className="card auth-card w-100" style={{ maxWidth: '420px' }}>
         <div className="card-body p-4 p-sm-5">
           {/* Logo */}
           <div className="text-center mb-4">
-            <Link to="/" className="d-inline-flex align-items-center gap-2 fw-bold text-decoration-none fs-3 text-dark">
+            <Link to="/" className="d-inline-flex align-items-center gap-2 fw-bold text-decoration-none fs-3 auth-logo-text">
               <Link2 className="text-info" size={28} />
               <span>ZipLink</span>
             </Link>
@@ -71,7 +76,7 @@ export const RegisterPage: React.FC = () => {
             <div className="mb-3">
               <label htmlFor="registerEmailInput" className="form-label small fw-semibold text-secondary">Email Address</label>
               <div className="input-group">
-                <span className="input-group-text bg-white border-end-0 text-muted">
+                <span className="input-group-text border-end-0 text-muted">
                   <Mail size={18} />
                 </span>
                 <input
@@ -90,7 +95,7 @@ export const RegisterPage: React.FC = () => {
             <div className="mb-3">
               <label htmlFor="registerPasswordInput" className="form-label small fw-semibold text-secondary">Password</label>
               <div className="input-group">
-                <span className="input-group-text bg-white border-end-0 text-muted">
+                <span className="input-group-text border-end-0 text-muted">
                   <Lock size={18} />
                 </span>
                 <input
@@ -109,7 +114,7 @@ export const RegisterPage: React.FC = () => {
             <div className="mb-4">
               <label htmlFor="confirmPasswordInput" className="form-label small fw-semibold text-secondary">Confirm Password</label>
               <div className="input-group">
-                <span className="input-group-text bg-white border-end-0 text-muted">
+                <span className="input-group-text border-end-0 text-muted">
                   <Lock size={18} />
                 </span>
                 <input
