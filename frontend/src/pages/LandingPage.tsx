@@ -2,6 +2,7 @@ import React from 'react'
 import { Link, Navigate } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
 import { Link2, ArrowRight, Zap, BarChart3, Sparkles } from 'lucide-react'
+import { ThemeToggle } from '../components/ui/ThemeToggle'
 
 export const LandingPage: React.FC = () => {
   const { isAuthenticated } = useAuthStore()
@@ -12,15 +13,16 @@ export const LandingPage: React.FC = () => {
   }
 
   return (
-    <div className="bg-white min-vh-100 d-flex flex-column">
+    <div className="min-vh-100 d-flex flex-column">
       {/* Navigation */}
-      <header className="navbar navbar-expand-lg navbar-light border-bottom py-3">
+      <header className="navbar navbar-expand-lg public-navbar py-3">
         <div className="container">
           <Link to="/" className="navbar-brand d-flex align-items-center gap-2 fw-bold fs-4">
             <Link2 className="text-info" size={28} />
             <span>ZipLink</span>
           </Link>
           <div className="d-flex align-items-center gap-3">
+            <ThemeToggle variant="icon" />
             <Link to="/login" className="btn btn-link text-decoration-none text-secondary fw-semibold">Sign In</Link>
             <Link to="/register" className="btn btn-primary-custom px-4 py-2 rounded-pill">Get Started</Link>
           </div>
@@ -29,7 +31,7 @@ export const LandingPage: React.FC = () => {
 
       {/* Hero Section */}
       <main className="flex-grow-1">
-        <section className="py-5 text-center bg-light border-bottom">
+        <section className="landing-hero py-5 text-center">
           <div className="container py-5">
             <div className="row justify-content-center">
               <div className="col-lg-8 col-md-10">
@@ -37,7 +39,7 @@ export const LandingPage: React.FC = () => {
                   <Sparkles size={14} className="me-1 align-middle" />
                   Experience lightning fast URL shortening
                 </span>
-                <h1 className="display-4 fw-extrabold text-dark mb-4">
+                <h1 className="display-4 fw-extrabold mb-4">
                   Shorten, Track, and Optimize Your Links
                 </h1>
                 <p className="lead text-muted mb-5">
@@ -58,12 +60,12 @@ export const LandingPage: React.FC = () => {
         </section>
 
         {/* Features Section */}
-        <section className="py-5">
+        <section className="landing-features py-5">
           <div className="container py-5">
             <h2 className="text-center fw-bold mb-5 fs-2">Everything you need to share smarter</h2>
             <div className="row g-4 justify-content-center">
               <div className="col-lg-4 col-md-6">
-                <div className="card h-100 p-4 border-0 shadow-sm rounded-3">
+                <div className="feature-card h-100 p-4">
                   <div className="bg-info-subtle p-3 rounded-circle d-inline-flex mb-3 align-self-start">
                     <Zap className="text-info" size={24} />
                   </div>
@@ -74,7 +76,7 @@ export const LandingPage: React.FC = () => {
                 </div>
               </div>
               <div className="col-lg-4 col-md-6">
-                <div className="card h-100 p-4 border-0 shadow-sm rounded-3">
+                <div className="feature-card h-100 p-4">
                   <div className="bg-success-subtle p-3 rounded-circle d-inline-flex mb-3 align-self-start">
                     <BarChart3 className="text-success" size={24} />
                   </div>
@@ -85,7 +87,7 @@ export const LandingPage: React.FC = () => {
                 </div>
               </div>
               <div className="col-lg-4 col-md-6">
-                <div className="card h-100 p-4 border-0 shadow-sm rounded-3">
+                <div className="feature-card h-100 p-4">
                   <div className="bg-warning-subtle p-3 rounded-circle d-inline-flex mb-3 align-self-start">
                     <Sparkles className="text-warning" size={24} />
                   </div>
@@ -101,7 +103,7 @@ export const LandingPage: React.FC = () => {
       </main>
 
       {/* Footer */}
-      <footer className="bg-dark text-light py-4 border-top border-secondary">
+      <footer className="landing-footer py-4">
         <div className="container text-center">
           <div className="d-flex align-items-center justify-content-center gap-2 mb-2">
             <Link2 className="text-info" size={20} />

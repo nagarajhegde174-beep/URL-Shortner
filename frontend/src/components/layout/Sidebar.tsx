@@ -2,6 +2,7 @@ import React from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../../store/authStore'
 import { LayoutDashboard, Sparkles, LogOut, Link2, X } from 'lucide-react'
+import { ThemeToggle } from '../ui/ThemeToggle'
 import api from '../../lib/axios'
 import toast from 'react-hot-toast'
 
@@ -70,11 +71,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
       {/* Upgrade Banner for FREE users */}
       {!isPro && (
         <div className="mx-3 my-3 p-3 rounded theme-rose border border-warning border-opacity-25 animate-fade-in">
-          <h6 className="fw-bold text-dark mb-1 d-flex align-items-center gap-1">
+          <h6 className="fw-bold text-white mb-1 d-flex align-items-center gap-1">
             <Sparkles size={16} className="text-warning" />
             Go Premium
           </h6>
-          <p className="text-muted small mb-2" style={{ fontSize: '0.8rem' }}>
+          <p className="text-light text-opacity-75 small mb-2" style={{ fontSize: '0.8rem' }}>
             Unlock custom short codes, detailed analytics and unlimited link generation.
           </p>
           <button 
@@ -89,8 +90,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
         </div>
       )}
 
-      {/* User Information & Logout */}
+      {/* Theme Toggle & User Information & Logout */}
       <div className="mt-auto p-3 border-top border-secondary border-opacity-20 bg-dark bg-opacity-25">
+        <div className="mb-3">
+          <ThemeToggle variant="full" className="theme-toggle-sidebar w-100" />
+        </div>
         <div className="d-flex align-items-center gap-2 mb-3">
           <div className="flex-grow-1 overflow-hidden">
             <div className="text-white text-truncate fw-medium small">{user?.email}</div>

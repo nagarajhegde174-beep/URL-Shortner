@@ -213,7 +213,7 @@ export const DashboardPage: React.FC = () => {
         <div className="col-12 col-sm-6 col-lg-3">
           <div className="metric-card metric-stripe-skyblue">
             <div className="text-secondary small fw-semibold text-uppercase tracking-wider">Total Links</div>
-            <div className="fs-2 fw-bold text-dark mt-1">
+            <div className="fs-2 fw-bold mt-1">
               {statsLoading ? '-' : stats?.totalLinks}
             </div>
             {!isPro && (
@@ -240,7 +240,7 @@ export const DashboardPage: React.FC = () => {
         <div className="col-12 col-sm-6 col-lg-3">
           <div className="metric-card metric-stripe-orange">
             <div className="text-secondary small fw-semibold text-uppercase tracking-wider">Total Clicks</div>
-            <div className="fs-2 fw-bold text-dark mt-1">
+            <div className="fs-2 fw-bold mt-1">
               {statsLoading ? '-' : stats?.totalClicks}
             </div>
             <div className="small text-muted mt-2" style={{ fontSize: '0.75rem' }}>
@@ -253,7 +253,7 @@ export const DashboardPage: React.FC = () => {
         <div className="col-12 col-sm-6 col-lg-3">
           <div className="metric-card metric-stripe-green">
             <div className="text-secondary small fw-semibold text-uppercase tracking-wider">Active Links</div>
-            <div className="fs-2 fw-bold text-dark mt-1">
+            <div className="fs-2 fw-bold mt-1">
               {statsLoading ? '-' : stats?.activeLinks}
             </div>
             <div className="small text-muted mt-2" style={{ fontSize: '0.75rem' }}>
@@ -288,11 +288,11 @@ export const DashboardPage: React.FC = () => {
       {/* Free User Promo Banner */}
       {!isPro && (
         <div className="alert border-0 theme-rose shadow-sm p-3 mb-4 rounded-3 d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 animate-fade-in">
-          <div className="d-flex align-items-center gap-2 text-dark">
+          <div className="d-flex align-items-center gap-2 text-white">
             <Sparkles className="text-warning" size={24} />
             <div>
-              <strong className="d-block">Upgrade to PRO plan for ₹499</strong>
-              <span className="small text-secondary">Unlock custom alias links, unlimited generation, and granular click analytics dashboard.</span>
+              <strong className="d-block text-white">Upgrade to PRO plan for ₹499</strong>
+              <span className="small text-white text-opacity-75">Unlock custom alias links, unlimited generation, and granular click analytics dashboard.</span>
             </div>
           </div>
           <button 
@@ -306,8 +306,8 @@ export const DashboardPage: React.FC = () => {
 
       {/* Links Table section */}
       <div className="card border-0 shadow-sm rounded-3">
-        <div className="card-header bg-white py-3 border-0">
-          <h5 className="mb-0 fw-bold text-dark">Shortened Links</h5>
+        <div className="card-header py-3 border-0">
+          <h5 className="mb-0 fw-bold">Shortened Links</h5>
         </div>
         <div className="table-responsive">
           <table className="table custom-table mb-0">
@@ -376,7 +376,7 @@ export const DashboardPage: React.FC = () => {
                         {link.longUrl}
                       </a>
                     </td>
-                    <td className="text-center fw-bold text-dark">{link.clickCount}</td>
+                    <td className="text-center fw-bold">{link.clickCount}</td>
                     <td className="text-center">
                       <button
                         className="btn p-0 border-0"
@@ -426,7 +426,7 @@ export const DashboardPage: React.FC = () => {
 
         {/* Pagination controls */}
         {linksPage && linksPage.totalPages > 1 && (
-          <div className="card-footer bg-white border-0 py-3 d-flex justify-content-between align-items-center">
+          <div className="card-footer border-0 py-3 d-flex justify-content-between align-items-center">
             <span className="small text-muted">
               Page {linksPage.number + 1} of {linksPage.totalPages}
             </span>
@@ -456,7 +456,7 @@ export const DashboardPage: React.FC = () => {
           <div className="modal-dialog modal-dialog-centered">
             <div className="modal-content border-0 shadow rounded-3">
               <div className="modal-header border-bottom-0 pb-0">
-                <h5 className="modal-title fw-bold text-dark">Shorten Long URL</h5>
+                <h5 className="modal-title fw-bold">Shorten Long URL</h5>
                 <button type="button" className="btn-close" onClick={() => setShowCreateModal(false)} aria-label="Close"></button>
               </div>
               <form onSubmit={handleCreateLink}>
@@ -487,7 +487,7 @@ export const DashboardPage: React.FC = () => {
                       )}
                     </div>
                     <div className="input-group">
-                      <span className="input-group-text bg-light text-muted small">ziplink/</span>
+                      <span className="input-group-text text-muted small">ziplink/</span>
                       <input
                         id="customCodeInput"
                         type="text"
@@ -509,7 +509,7 @@ export const DashboardPage: React.FC = () => {
                   <div className="mb-3">
                     <label htmlFor="expiresAtInput" className="form-label small fw-semibold text-secondary">Expiry Date (Optional)</label>
                     <div className="input-group">
-                      <span className="input-group-text bg-white text-muted">
+                      <span className="input-group-text text-muted">
                         <Calendar size={16} />
                       </span>
                       <input
@@ -525,7 +525,7 @@ export const DashboardPage: React.FC = () => {
                 </div>
 
                 <div className="modal-footer border-top-0 pt-0">
-                  <button type="button" className="btn btn-light px-4" onClick={() => setShowCreateModal(false)}>Cancel</button>
+                  <button type="button" className="btn btn-outline-secondary px-4" onClick={() => setShowCreateModal(false)}>Cancel</button>
                   <button 
                     type="submit" 
                     className="btn btn-primary-custom px-4 d-flex align-items-center gap-1"

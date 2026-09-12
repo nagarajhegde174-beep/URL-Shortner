@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { Toaster } from 'react-hot-toast'
 import { useAuthStore } from './store/authStore'
+import { useTheme } from './context/ThemeContext'
 import api from './lib/axios'
 import { PrivateRoute } from './components/layout/PrivateRoute'
 import { Sidebar } from './components/layout/Sidebar'
@@ -58,6 +59,7 @@ const PrivateLayout: React.FC = () => {
 
 export const App: React.FC = () => {
   const { setAuth, clearAuth, setIsLoading, isLoading } = useAuthStore()
+  const { theme } = useTheme()
 
   useEffect(() => {
     // Attempt silent refresh on app load
@@ -77,7 +79,7 @@ export const App: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="d-flex justify-content-center align-items-center min-vh-100 bg-light">
+      <div className="d-flex justify-content-center align-items-center min-vh-100">
         <div className="spinner-border text-info" role="status" style={{ width: '3rem', height: '3rem' }}>
           <span className="visually-hidden">Loading session...</span>
         </div>
@@ -108,7 +110,18 @@ export const App: React.FC = () => {
       </BrowserRouter>
       
       {/* Toast popup manager */}
-      <Toaster position="top-right" toastOptions={{ duration: 4000 }} />
+      <Toaster 
+        position="top-right" 
+        toastOptions={{ 
+          duration: 4000,
+          style: {
+            background: theme === 'dark' ? '#1e293b' : '#ffffff',
+            color: theme === 'dark' ? '#f8fafc' : '#0f172a',
+            border: theme === 'dark' ? '1px solid #334155' : '1px solid #e2e8f0',
+            boxShadow: theme === 'dark' ? '0 10px 15px -3px rgba(0, 0, 0, 0.5)' : '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
+          }
+        }} 
+      />
     </QueryClientProvider>
   )
 }
