@@ -224,11 +224,10 @@ This starts 5 containers:
 | Redis | localhost:6380 |
 | Kafka | localhost:9092 |
 
-### 3. Access the Application
+---
 
-- **Frontend:** http://localhost/
-- **Backend API:** http://localhost:8080/api/
-- **Swagger UI:** http://localhost:8080/swagger-ui.html
-- **OpenAPI JSON:** http://localhost:8080/v3/api-docs
+## 📄 License
+
+MIT
 
 ---
