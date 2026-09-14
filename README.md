@@ -19,34 +19,33 @@
   <img src="https://img.shields.io/badge/LICENSE-MIT-yellow?style=for-the-badge" alt="License MIT" />
 </p>
 
-<p align ="center"> A production-grade URL Shortener monolith designed for speed, security, and scalability.</p>
+<p align="center">A production-grade URL Shortener monolith designed for speed, security, and scalability.</p>
 
 ---
 
-## 🛠️ Tech Stack
+## Highlights
 
-### Backend
-- **Core Framework**: Java 21 & Spring Boot 3.3.2
-- **Security & Auth**: Spring Security, JJWT 0.12.5 (Access Tokens in memory + Refresh Tokens in HttpOnly Cookies)
-- **Database & Persistence**: PostgreSQL 15, Spring Data JPA (Hibernate), Flyway DB Migrations
-- **Caching & Rate Limiting**: Redis 7 (Redirect caching, sliding window Lua rate limiter)
-- **Messaging & Analytics**: Apache Kafka 3.7 / Confluent 7.5.0 (Asynchronous event publishing & consumption)
-- **Email Notifications**: Spring Boot Mail / JavaMail (HTML email password reset flow)
-- **Payment Integration**: Razorpay Java SDK 1.4.3 (PRO Subscription payments & webhook signature verification)
-- **API Documentation**: Springdoc OpenAPI 2.5.0 / Swagger UI 3.0
-- **Build Tool**: Apache Maven 3.9+
+🔗 Shorten long URLs with unique Base62 short codes.
 
-### Frontend
-- **Framework & Runtime**: React 19, Vite 8.2, TypeScript 6.0
-- **UI Framework & Styling**: Bootstrap 5.3, Custom Dark/Light Theme System (CSS Variables + React Context)
-- **State & Data Fetching**: Zustand 5.0 (Auth state), TanStack Query (React Query v5)
-- **HTTP Client**: Axios 1.20 (With automatic 401 token refresh queue interceptor)
-- **Data Visualization**: Chart.js 4.5 & `react-chartjs-2` (Theme-aware analytics charts)
-- **UI Icons & Toast**: Lucide React icons, `react-hot-toast` notifications
+✏️ Create custom aliases for eligible users.
 
-### DevOps & Infrastructure
-- **Containerization**: Docker & Docker Compose
-- **Web Server & Reverse Proxy**: Nginx (Production static build server & `/api` proxy)
+⏳ Set URL expiration times.
+
+🔐 Secure authentication using JWT + HttpOnly refresh cookies.
+
+📧 Forgot-password and email reset flow.
+
+⚡ Redis caching and API rate limiting.
+
+📊 Kafka-based asynchronous click analytics.
+
+💳 Razorpay Test Mode subscription support.
+
+🌙 Dark / Light theme.
+
+📈 Analytics dashboard with Chart.js.
+
+🐳 Dockerized deployment with Nginx.
 
 ---
 
@@ -68,7 +67,7 @@ graph TD
     subgraph "Data & Messaging"
         Postgres[("PostgreSQL 15\nPort: 5432 internal / 5433 host")]
         Redis[("Redis 7\nPort: 6379 internal / 6380 host")]
-        Kafka[("Kafka 7.5 (KRaft)\nPort: 9092")]
+        Kafka[("Kafka 3.7 (KRaft)\nPort: 9092")]
     end
 
     Browser -->|"HTTP :80"| Nginx
@@ -79,7 +78,7 @@ graph TD
     SpringBoot -->|"Cache + Rate Limiting"| Redis
     SpringBoot -->|"Publishes ClickEvent"| Kafka
     Kafka -->|"Consumes ClickEvent"| SpringBoot
-    SpringBoot -->|"Webhooks"| Razorpay["💳 Razorpay\n(External)"]
+    Razorpay["💳 Razorpay\n(External)"] -->|"Webhooks"| SpringBoot
 ```
 
 ---
@@ -137,92 +136,87 @@ URL Shortener/
 
 ---
 
-## Local Development Setup
+## Getting Started
 
-### Prerequisites
-- Java 21 (JDK)
+Prerequisites
+
+- Java 21
 - Maven 3.9+
 - Node.js 20+
 - Docker Desktop
 
-### 1. Start Infrastructure Services (Docker)
+1. Start Infrastructure
 
-```bash
+```
 docker compose up -d postgres redis kafka
 ```
 
-This starts:
-- PostgreSQL on port `5433`
-- Redis on port `6380`
-- Kafka on port `9092`
+2. Start Backend
 
-### 2. Configure Local Application Settings
-
-The following files are **git-ignored** and must exist locally:
-
-- `backend/src/main/resources/application.yml`
-- `backend/src/main/resources/application-dev.yml`
-
-Copy from `backend/.gitignore` — see comments in file for structure.
-
-### 3. Start Backend
-
-```bash
+```
 cd backend
 mvn spring-boot:run
 ```
 
-Backend runs on: **http://localhost:8080**
+Backend:
 
-### 4. Start Frontend
+http://localhost:8080
 
-```bash
+3. Start Frontend
+
+```
 cd frontend
 npm install
 npm run dev
 ```
 
-Frontend runs on: **http://localhost:5173**
+Frontend:
 
-> The Vite dev proxy forwards all `/api` requests to `http://localhost:8080` automatically.
+http://localhost:5173
 
----
+Configuration
 
-## Production Deployment (Docker Compose)
+Create the local environment file:
 
-### 1. Configure Secrets
-
-Copy the environment template and fill in real values:
-
-```bash
+```
 cp environment/.env.example environment/.env
 ```
 
-Edit `environment/.env`:
+Configure the required values:
 
-```env
-JWT_SECRET=<your-256-bit-secret-key>
+```
+JWT_SECRET=<your-secret>
+
 RAZORPAY_KEY_ID=rzp_test_...
-RAZORPAY_KEY_SECRET=<your-razorpay-key-secret>
-RAZORPAY_WEBHOOK_SECRET=<your-webhook-secret>
+RAZORPAY_KEY_SECRET=<your-secret>
+RAZORPAY_WEBHOOK_SECRET=<your-secret>
 ```
 
-> ⚠️ Never commit real secrets. The `environment/.env` file is git-ignored at the root level.
+---
 
-### 2. Build and Start All Services
+## Production
 
-```bash
+Build and start all services:
+
+```
 docker compose up --build -d
 ```
 
-This starts 5 containers:
-| Service | Port |
-|---|---|
-| Frontend (Nginx + React) | http://localhost **(:80)** |
-| Backend (Spring Boot) | http://localhost:8080 |
-| PostgreSQL | localhost:5433 |
-| Redis | localhost:6380 |
-| Kafka | localhost:9092 |
+Application:
+
+http://localhost
+
+Check services:
+
+```
+docker compose ps
+```
+
+Stop services:
+
+```
+docker compose down
+```
 
 ---
 
