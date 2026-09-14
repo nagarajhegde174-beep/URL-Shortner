@@ -46,7 +46,6 @@
 📈 Analytics dashboard with Chart.js.
 
 🐳 Dockerized deployment with Nginx.
-
 ---
 
 ## Architecture
