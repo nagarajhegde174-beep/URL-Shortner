@@ -13,10 +13,10 @@
   <img src="https://img.shields.io/badge/REDIS-7-DC382D?style=for-the-badge&logo=redis&logoColor=white" alt="Redis 7" />
   <img src="https://img.shields.io/badge/KAFKA-3.7-231F20?style=for-the-badge&logo=apachekafka&logoColor=white" alt="Kafka 3.7" />
   <img src="https://img.shields.io/badge/RAZORPAY-1.4.3-02042B?style=for-the-badge&logo=razorpay&logoColor=3395FF" alt="Razorpay" />
-  <img src="https://img.shields.io/badge/SWAGGER-OpenAPI_3.0-85EA2D?style=for-the-badge&logo=swagger&logoColor=black" alt="Swagger" />
+  <!-- <img src="https://img.shields.io/badge/SWAGGER-OpenAPI_3.0-85EA2D?style=for-the-badge&logo=swagger&logoColor=black" alt="Swagger" /> -->
   <img src="https://img.shields.io/badge/DOCKER-Compose-2496ED?style=for-the-badge&logo=docker&logoColor=white" alt="Docker" />
-  <img src="https://img.shields.io/badge/NGINX-1.26-009639?style=for-the-badge&logo=nginx&logoColor=white" alt="Nginx" />
-  <img src="https://img.shields.io/badge/LICENSE-MIT-yellow?style=for-the-badge" alt="License MIT" />
+  <!-- <img src="https://img.shields.io/badge/NGINX-1.26-009639?style=for-the-badge&logo=nginx&logoColor=white" alt="Nginx" /> -->
+  <!-- <img src="https://img.shields.io/badge/LICENSE-MIT-yellow?style=for-the-badge" alt="License MIT" /> -->
 </p>
 
 <p align="center">A production-grade URL Shortener monolith designed for speed, security, and scalability.</p>
